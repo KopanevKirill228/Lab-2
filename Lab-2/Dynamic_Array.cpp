@@ -1,4 +1,6 @@
-﻿#include <stdexcept>
+#include <stdexcept>
+#include "Dynamic_array.h"
+
 
 template <class T>
 DynamicArray<T>::DynamicArray()
