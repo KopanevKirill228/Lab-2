@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Sequence.h"
-#include "LinkedList.h"
+#include "Linked_List.h"
 
 template <class T>
 class ListSequence : public Sequence<T> {
@@ -23,6 +23,9 @@ public:
     Sequence<T>* InsertAt(const T& item, int index) override;
     Sequence<T>* Concat(const Sequence<T>& other) const override;
 
+    T operator[](int index) const override;
+    Sequence<T>* operator+(const Sequence<T>& other) const override;
+
 protected:
     virtual ListSequence<T>* GetInstance() = 0;
     virtual ListSequence<T>* Clone() const = 0;
@@ -41,6 +44,7 @@ class MutableListSequence : public ListSequence<T> {
 public:
     MutableListSequence();
     MutableListSequence(const T* items, int count);
+    MutableListSequence(const LinkedList<T>& list);
     MutableListSequence(const MutableListSequence<T>& other);
 
 protected:
@@ -48,12 +52,12 @@ protected:
     ListSequence<T>* Clone() const override;
 };
 
-
 template <class T>
 class ImmutableListSequence : public ListSequence<T> {
 public:
     ImmutableListSequence();
     ImmutableListSequence(const T* items, int count);
+    ImmutableListSequence(const LinkedList<T>& list);
     ImmutableListSequence(const ImmutableListSequence<T>& other);
 
 protected:
@@ -62,3 +66,4 @@ protected:
 };
 
 
+#include "ListSequence_impl.h"

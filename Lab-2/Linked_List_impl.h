@@ -161,3 +161,8 @@ LinkedList<T> LinkedList<T>::Concat(const LinkedList<T>& list) const {
     }
     return result;
 }
+
+template <class T>
+T LinkedList<T>::operator[](int index) const {
+    return Get(index);
+}

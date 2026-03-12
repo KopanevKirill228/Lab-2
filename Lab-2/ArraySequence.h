@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Sequence.h"
-#include "DynamicArray.h"
+#include "Dynamic_Array.h"
 
 template <class T>
 class ArraySequence : public Sequence<T> {
@@ -21,6 +21,9 @@ public:
     Sequence<T>* Prepend(const T& item) override;
     Sequence<T>* InsertAt(const T& item, int index) override;
     Sequence<T>* Concat(const Sequence<T>& other) const override;
+
+    T operator[](int index) const override;
+    Sequence<T>* operator+(const Sequence<T>& other) const override;
 
 protected:
     virtual ArraySequence<T>* GetInstance() = 0;
@@ -60,3 +63,4 @@ protected:
     ArraySequence<T>* Clone() const override;
 };
 
+#include "ArraySequence_impl.h"

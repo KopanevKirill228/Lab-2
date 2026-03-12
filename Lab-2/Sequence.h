@@ -15,4 +15,7 @@ public:
     virtual Sequence<T>* Prepend(const T& item) = 0;
     virtual Sequence<T>* InsertAt(const T& item, int index) = 0;
     virtual Sequence<T>* Concat(const Sequence<T>& other) const = 0;
+
+    virtual T operator[](int index) const = 0;
+    virtual Sequence<T>* operator+(const Sequence<T>& other) const = 0;
 };

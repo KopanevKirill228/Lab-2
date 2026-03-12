@@ -25,6 +25,9 @@ public:
 
     void Resize(int newSize);
 
+    T& operator[](int index);
+    const T& operator[](int index) const;
+
 private:
     T* data_;
     int size_;
@@ -32,4 +35,4 @@ private:
     void CheckIndex(int index) const;
 };
 
-#include "DynamicArray.tpp"
+#include "Dynamic_Array_impl.h"

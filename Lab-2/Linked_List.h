@@ -23,6 +23,8 @@ public:
     LinkedList<T> Concat(const LinkedList<T>& list) const;
     LinkedList<T> GetSubList(int startIndex, int endIndex) const;
 
+    T operator[](int index) const;
+
 private:
     struct Node;
     Node* head_;
@@ -34,5 +36,5 @@ private:
     void Clear();
 };
 
-#include "Linked_List.tpp"
+#include "Linked_List_impl.h"
 

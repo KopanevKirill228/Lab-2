@@ -86,3 +86,16 @@ void DynamicArray<T>::Resize(int newSize) {
     data_ = newData;
     size_ = newSize;
 }
+
+
+template <class T>
+T& DynamicArray<T>::operator[](int index) {
+    CheckIndex(index);
+    return data_[index];
+}
+
+template <class T>
+const T& DynamicArray<T>::operator[](int index) const {
+    CheckIndex(index);
+    return data_[index];
+}
