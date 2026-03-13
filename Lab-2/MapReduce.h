@@ -2,6 +2,8 @@
 #include "Sequence.h"
 #include "ArraySequence.h"
 #include "Pair.h"
+#include <cmath>
+#include <stack>
 
 // MAP
 // Принимает последовательность T, функцию T->U
@@ -99,4 +101,165 @@ Sequence<Sequence<T>*>* ZipN(const Sequence<Sequence<T>*>* seqs) {
 template <class T>
 Sequence<Sequence<T>*>* UnZipN(const Sequence<Sequence<T>*>* seqs) {
     return ZipN(seqs);  // транспонирование — обратная операция к себе самой
+}
+
+
+// ===== вспомогательные map/reduce =====
+
+// Map: применяет функцию к каждому элементу
+template <class T, class R>
+MutableArraySequence<R>* Map(const Sequence<T>& seq, R(*func)(T)) {
+    MutableArraySequence<R>* result = new MutableArraySequence<R>();
+    for (int i = 0; i < seq.GetLength(); i++)
+        result->Append(func(seq.Get(i)));
+    return result;
+}
+
+// Reduce: свёртка последовательности
+template <class T, class R>
+R Reduce(const Sequence<T>& seq, R(*func)(R, T), R init) {
+    R acc = init;
+    for (int i = 0; i < seq.GetLength(); i++)
+        acc = func(acc, seq.Get(i));
+    return acc;
+}
+
+
+
+// П-1: min, max, avg за один проход
+
+template <class T>
+struct MinMaxAvg { T min; T max; double avg; };
+
+template <class T>
+MinMaxAvg<T> GetMinMaxAvg(const Sequence<T>& seq) {
+    if (seq.GetLength() == 0)
+        throw std::out_of_range("Empty sequence");
+
+    T mn = seq.Get(0), mx = seq.Get(0);
+    double sum = 0;
+
+    for (int i = 0; i < seq.GetLength(); i++) {
+        T val = seq.Get(i);
+        if (val < mn) mn = val;
+        if (val > mx) mx = val;
+        sum += val;
+    }
+    return { mn, mx, sum / seq.GetLength() };
+}
+
+// П-2: медиана (QuickSort + середина)
+
+template <class T>
+void QuickSort(T* arr, int left, int right) {
+    if (left >= right) return;
+    T pivot = arr[(left + right) / 2];
+    int i = left, j = right;
+    while (i <= j) {
+        while (arr[i] < pivot) i++;
+        while (arr[j] > pivot) j--;
+        if (i <= j) { T tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp; i++; j--; }
+    }
+    QuickSort(arr, left, j);
+    QuickSort(arr, i, right);
+}
+
+template <class T>
+double GetMedian(const Sequence<T>& seq) {
+    int n = seq.GetLength();
+    if (n == 0) throw std::out_of_range("Empty sequence");
+    T* arr = new T[n];
+    for (int i = 0; i < n; i++) arr[i] = seq.Get(i);
+    QuickSort(arr, 0, n - 1);
+    double result = (n % 2 == 0)
+        ? (arr[n / 2 - 1] + arr[n / 2]) / 2.0
+        : arr[n / 2];
+    delete[] arr;
+    return result;
+}
+
+// П-3: количество перестановок (инверсий)
+
+template <class T>
+int CountInversions(const Sequence<T>& seq) {
+    int count = 0;
+    int n = seq.GetLength();
+    for (int i = 0; i < n; i++)
+        for (int j = i + 1; j < n; j++)
+            if (seq.Get(i) > seq.Get(j))
+                count++;
+    return count;
+}
+
+
+
+// П-5: все префиксы и постфиксы
+
+template <class T>
+MutableArraySequence<MutableArraySequence<T>*>* GetPrefixes(const Sequence<T>& seq) {
+    auto* result = new MutableArraySequence<MutableArraySequence<T>*>();
+    for (int len = 1; len <= seq.GetLength(); len++) {
+        auto* prefix = new MutableArraySequence<T>();
+        for (int i = 0; i < len; i++)
+            prefix->Append(seq.Get(i));
+        result->Append(prefix);
+    }
+    return result;
+}
+
+template <class T>
+MutableArraySequence<MutableArraySequence<T>*>* GetSuffixes(const Sequence<T>& seq) {
+    auto* result = new MutableArraySequence<MutableArraySequence<T>*>();
+    for (int start = 0; start < seq.GetLength(); start++) {
+        auto* suffix = new MutableArraySequence<T>();
+        for (int i = start; i < seq.GetLength(); i++)
+            suffix->Append(seq.Get(i));
+        result->Append(suffix);
+    }
+    return result;
+}
+
+// П-6: для каждого a_i: (a_{i-1} + a_i + a_{i+1}) / 3
+
+template <class T>
+MutableArraySequence<double>* GetMovingAverage(const Sequence<T>& seq) {
+    auto* result = new MutableArraySequence<double>();
+    int n = seq.GetLength();
+    for (int i = 0; i < n; i++) {
+        double sum = seq.Get(i);
+        int cnt = 1;
+        if (i > 0) { sum += seq.Get(i - 1); cnt++; }
+        if (i < n - 1) { sum += seq.Get(i + 1); cnt++; }
+        result->Append(sum / cnt);
+    }
+    return result;
+}
+
+// П-7: для каждого a_i: sqrt(sigma^2 - a_i^2)
+
+template <class T>
+MutableArraySequence<double>* GetSqrtVariance(const Sequence<T>& seq) {
+    int n = seq.GetLength();
+    double sum_sq = 0;
+    for (int i = 0; i < n; i++)
+        sum_sq += (double)seq.Get(i) * seq.Get(i);
+    double sigma2 = sum_sq / n;
+
+    auto* result = new MutableArraySequence<double>();
+    for (int i = 0; i < n; i++) {
+        double val = sigma2 - (double)seq.Get(i) * seq.Get(i);
+        result->Append(val >= 0 ? std::sqrt(val) : 0.0);
+    }
+    return result;
+}
+
+// П-8: a_i + a_{n-i} (сумма с отражением)
+
+template <class T>
+MutableArraySequence<T>* GetMirrorSum(const Sequence<T>& seq) {
+    int n = seq.GetLength();
+    auto* result = new MutableArraySequence<T>();
+    for (int i = 0; i < n; i++)
+        result->Append(seq.Get(i) + seq.Get(n - 1 - i));
+    return result;
 }

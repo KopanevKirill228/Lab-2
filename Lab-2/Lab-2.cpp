@@ -295,6 +295,60 @@ int main() {
     delete seq6;
     delete seq5;
 
+
+
+    int data5[] = { 3, 1, 4, 1, 5, 9, 2, 6 };
+    MutableArraySequence<int> testSeq(data5, 8);
+
+    // П-1
+    auto stats = GetMinMaxAvg(testSeq);
+    std::cout << "Min=" << stats.min << " Max=" << stats.max
+        << " Avg=" << stats.avg << std::endl;
+
+    // П-2
+    std::cout << "Median=" << GetMedian(testSeq) << std::endl;
+
+    // П-3
+    std::cout << "Inversions=" << CountInversions(testSeq) << std::endl;
+
+    // П-5 префиксы
+    auto* prefixes = GetPrefixes(testSeq);
+    std::cout << "Prefixes:" << std::endl;
+    for (int i = 0; i < prefixes->GetLength(); i++) {
+        auto* prefix = prefixes->Get(i);
+        std::cout << "  [";
+        for (int j = 0; j < prefix->GetLength(); j++) {
+            std::cout << prefix->Get(j);
+            if (j < prefix->GetLength() - 1) std::cout << ", ";
+        }
+        std::cout << "]" << std::endl;
+    }
+
+    // П-6
+    auto* movingAvg = GetMovingAverage(testSeq);
+    std::cout << "Moving avg: ";
+    for (int i = 0; i < movingAvg->GetLength(); i++)
+        std::cout << movingAvg->Get(i) << " ";
+    std::cout << std::endl;
+
+    // П-7
+    auto* sqrtVar = GetSqrtVariance(testSeq);
+    std::cout << "Sqrt variance: ";
+    for (int i = 0; i < sqrtVar->GetLength(); i++)
+        std::cout << sqrtVar->Get(i) << " ";
+    std::cout << std::endl;
+
+    // П-8
+    auto* mirrorSum = GetMirrorSum(testSeq);
+    std::cout << "Mirror sum: ";
+    for (int i = 0; i < mirrorSum->GetLength(); i++)
+        std::cout << mirrorSum->Get(i) << " ";
+    std::cout << std::endl;
+
+    delete movingAvg;
+    delete sqrtVar;
+    delete mirrorSum;
+
     std::cout << "=== Все тесты пройдены ===" << std::endl;
 
     return 0;
