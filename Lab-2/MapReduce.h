@@ -68,3 +68,35 @@ void Unzip(const Sequence<Pair<T, U>>* seq,
     outFirst = first;
     outSecond = second;
 }
+
+// ZIPN
+// Принимает последовательность последовательностей одного типа T
+// Возвращает транспонированную последовательность последовательностей
+template <class T>
+Sequence<Sequence<T>*>* ZipN(const Sequence<Sequence<T>*>* seqs) {
+    if (seqs->GetLength() == 0)
+        return new MutableArraySequence<Sequence<T>*>();
+
+    // минимальная длина среди всех последовательностей
+    int minLen = seqs->Get(0)->GetLength();
+    for (int i = 1; i < seqs->GetLength(); ++i)
+        if (seqs->Get(i)->GetLength() < minLen)
+            minLen = seqs->Get(i)->GetLength();
+
+    MutableArraySequence<Sequence<T>*>* result = new MutableArraySequence<Sequence<T>*>();
+
+    for (int col = 0; col < minLen; ++col) {
+        MutableArraySequence<T>* row = new MutableArraySequence<T>();
+        for (int seqIdx = 0; seqIdx < seqs->GetLength(); ++seqIdx)
+            row->Append(seqs->Get(seqIdx)->Get(col));
+        result->Append(row);
+    }
+
+    return result;
+}
+
+// UNZIPN — обратная к ZipN
+template <class T>
+Sequence<Sequence<T>*>* UnZipN(const Sequence<Sequence<T>*>* seqs) {
+    return ZipN(seqs);  // транспонирование — обратная операция к себе самой
+}

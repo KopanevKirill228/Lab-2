@@ -2,6 +2,7 @@
 
 #include "Sequence.h"
 #include "Linked_List.h"
+#include "ienumerator.h"
 
 template <class T>
 class ListSequence : public Sequence<T> {
@@ -26,6 +27,31 @@ public:
     T operator[](int index) const override;
     Sequence<T>* operator+(const Sequence<T>& other) const override;
 
+
+    class Enumerator : public IEnumerator<T> {
+    private:
+        const ListSequence<T>* seq_;
+        int index_;
+    public:
+        Enumerator(const ListSequence<T>* seq) : seq_(seq), index_(-1) {}
+
+        bool move_next() override {
+            index_++;
+            return index_ < seq_->GetLength();
+        }
+
+        const T& get_current() const override {
+            return seq_->Get(index_);
+        }
+
+        void reset() override { index_ = -1; }
+    };
+
+    IEnumerator<T>* get_enumerator() const override {
+        return new Enumerator(this);
+    }
+
+
 protected:
     virtual ListSequence<T>* GetInstance() = 0;
     virtual ListSequence<T>* Clone() const = 0;
@@ -46,6 +72,21 @@ public:
     MutableListSequence(const T* items, int count);
     MutableListSequence(const LinkedList<T>& list);
     MutableListSequence(const MutableListSequence<T>& other);
+
+    // вложенный Builder
+    class Builder {
+    private:
+        MutableListSequence<T>* seq_;
+    public:
+        Builder() : seq_(new MutableListSequence<T>()) {}
+
+        ~Builder() { delete seq_; }
+
+        Builder& Append(const T& item);
+        Builder& AppendAll(const T* items, int count);
+        Builder& AppendSequence(const Sequence<T>& other);
+        MutableListSequence<T>* Build();
+    };
 
 protected:
     ListSequence<T>* GetInstance() override;

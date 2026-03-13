@@ -168,3 +168,36 @@ template <class T>
 ListSequence<T>* ImmutableListSequence<T>::Clone() const {
     return new ImmutableListSequence<T>(*this);
 }
+
+// Builder
+
+template <class T>
+typename MutableListSequence<T>::Builder&
+MutableListSequence<T>::Builder::Append(const T& item) {
+    seq_->Append(item);
+    return *this;
+}
+
+template <class T>
+typename MutableListSequence<T>::Builder&
+MutableListSequence<T>::Builder::AppendAll(const T* items, int count) {
+    for (int i = 0; i < count; i++)
+        seq_->Append(items[i]);
+    return *this;
+}
+
+template <class T>
+typename MutableListSequence<T>::Builder&
+MutableListSequence<T>::Builder::AppendSequence(const Sequence<T>& other) {
+    for (int i = 0; i < other.GetLength(); i++)
+        seq_->Append(other.Get(i));
+    return *this;
+}
+
+template <class T>
+MutableListSequence<T>*
+MutableListSequence<T>::Builder::Build() {
+    MutableListSequence<T>* result = seq_;
+    seq_ = new MutableListSequence<T>();
+    return result;
+}

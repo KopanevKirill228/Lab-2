@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include "Sequence.h"
 #include "Dynamic_Array.h"
+#include "ienumerator.h"
 
 template <class T>
 class ArraySequence : public Sequence<T> {
@@ -25,6 +26,32 @@ public:
     T operator[](int index) const override;
     Sequence<T>* operator+(const Sequence<T>& other) const override;
 
+
+    class Enumerator : public IEnumerator<T> {
+    private:
+        const ArraySequence<T>* seq_;
+        int index_;
+    public:
+        Enumerator(const ArraySequence<T>* seq) : seq_(seq), index_(-1) {}
+
+        bool move_next() override {
+            index_++;
+            return index_ < seq_->GetLength();
+        }
+
+        const T& get_current() const override {
+            return seq_->Get(index_);
+        }
+
+        void reset() override {
+            index_ = -1;
+        }
+    };
+
+    IEnumerator<T>* get_enumerator() const override {
+        return new Enumerator(this);
+    }
+
 protected:
     virtual ArraySequence<T>* GetInstance() = 0;
     virtual ArraySequence<T>* Clone() const = 0;
@@ -44,6 +71,22 @@ public:
     MutableArraySequence();
     MutableArraySequence(const T* items, int count);
     MutableArraySequence(const MutableArraySequence<T>& other);
+
+
+    // вложенный Builder
+    class Builder {
+    private:
+        MutableArraySequence<T>* seq_;
+    public:
+        Builder() : seq_(new MutableArraySequence<T>()) {}
+
+        ~Builder() { delete seq_; }
+
+        Builder& Append(const T& item);
+        Builder& AppendAll(const T* items, int count);
+        Builder& AppendSequence(const Sequence<T>& other);
+        MutableArraySequence<T>* Build();
+    };
 
 protected:
     ArraySequence<T>* GetInstance() override;

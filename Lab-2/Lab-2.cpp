@@ -5,7 +5,7 @@
 #include <clocale>
 #include "Pair.h"
 #include "BitSequence.h"
-
+#include "Adaptive_Sequence.h"
 
 // Вспомогательная функция для вывода последовательности
 void Print(const Sequence<int>* seq) {
@@ -214,6 +214,86 @@ int main() {
     std::cout << "bitA | bitB: "; (bitA | bitB).Print(); // [1, 1, 1, 0]
     std::cout << "bitA ^ bitB: "; (bitA^ bitB).Print(); // [1, 1, 0, 0]
     std::cout << "~bitA:       "; (~bitA).Print();        // [0, 1, 0, 1]
+
+
+
+
+
+
+    MutableArraySequence<int> seq1;
+    seq1.Append(10);
+    seq1.Append(20);
+    seq1.Append(30);
+    seq1.Append(40);
+
+    // Тестируем итератор
+    std::cout << "Iterating via IEnumerator: ";
+    IEnumerator<int>* en = seq1.get_enumerator();
+    while (en->move_next()) {
+        std::cout << en->get_current() << " ";
+    }
+    delete en;
+    std::cout << std::endl;
+
+    // Тест reset
+    std::cout << "After reset: ";
+    en = seq1.get_enumerator();
+    en->move_next();
+    en->move_next(); // на 20
+    std::cout << "Current: " << en->get_current() << std::endl; // 20
+    en->reset();
+    en->move_next(); // снова на 10
+    std::cout << "After reset current: " << en->get_current() << std::endl; // 10
+    delete en;
+
+
+
+
+    AdaptiveSequence<int> seq4;
+    seq4.Append(1);
+    seq4.Append(2);
+    seq4.Append(3);
+
+    std::cout << "Initially array: " << seq4.IsArray() << std::endl; // 1
+
+    // Много вставок — должен переключиться на List
+    for (int i = 0; i < 15; i++)
+        seq4.Prepend(i);
+
+    std::cout << "After many Prepend, is array: " << seq4.IsArray() << std::endl; // 0
+
+    // Много чтений — должен переключиться обратно на Array
+    for (int i = 0; i < 25; i++)
+        seq4.Get(0);
+
+    std::cout << "After many Get, is array: " << seq4.IsArray() << std::endl; // 1
+
+
+
+    // ArraySequence Builder
+    MutableArraySequence<int>* seq5 = MutableArraySequence<int>::Builder()
+        .Append(1)
+        .Append(2)
+        .Append(3)
+        .Build();
+    std::cout << "ArraySequence Builder: ";
+    for (int i = 0; i < seq5->GetLength(); i++)
+        std::cout << seq5->Get(i) << " ";
+    std::cout << std::endl; // 1 2 3
+
+    // ListSequence Builder
+    int arr[] = { 10, 20, 30 };
+    MutableListSequence<int>* seq6 = MutableListSequence<int>::Builder()
+        .AppendAll(arr, 3)
+        .Append(40)
+        .Build();
+    std::cout << "ListSequence Builder: ";
+    for (int i = 0; i < seq6->GetLength(); i++)
+        std::cout << seq6->Get(i) << " ";
+    std::cout << std::endl; // 10 20 30 40
+
+    delete seq6;
+    delete seq5;
 
     std::cout << "=== Все тесты пройдены ===" << std::endl;
 

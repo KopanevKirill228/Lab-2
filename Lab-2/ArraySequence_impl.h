@@ -172,3 +172,35 @@ template <class T>
 ArraySequence<T>* ImmutableArraySequence<T>::Clone() const {
     return new ImmutableArraySequence<T>(*this);
 }
+
+// Builder
+template <class T>
+typename MutableArraySequence<T>::Builder&
+MutableArraySequence<T>::Builder::Append(const T& item) {
+    seq_->Append(item);
+    return *this;
+}
+
+template <class T>
+typename MutableArraySequence<T>::Builder&
+MutableArraySequence<T>::Builder::AppendAll(const T* items, int count) {
+    for (int i = 0; i < count; i++)
+        seq_->Append(items[i]);
+    return *this;
+}
+
+template <class T>
+typename MutableArraySequence<T>::Builder&
+MutableArraySequence<T>::Builder::AppendSequence(const Sequence<T>& other) {
+    for (int i = 0; i < other.GetLength(); i++)
+        seq_->Append(other.Get(i));
+    return *this;
+}
+
+template <class T>
+MutableArraySequence<T>*
+MutableArraySequence<T>::Builder::Build() {
+    MutableArraySequence<T>* result = seq_;
+    seq_ = new MutableArraySequence<T>();
+    return result;
+}
