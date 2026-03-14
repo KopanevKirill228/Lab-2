@@ -14,7 +14,7 @@ public:
     virtual ~ArraySequence() = default;
 
     const T& GetFirst() const override;
-    const T& GetLast() const override;
+    const T& GetLast()  const override;
     const T& Get(int index) const override;
     int GetLength() const override;
 
@@ -27,7 +27,7 @@ public:
     T operator[](int index) const override;
     Sequence<T>* operator+(const Sequence<T>& other) const override;
 
-
+private:
     class Enumerator : public IEnumerator<T> {
     private:
         const ArraySequence<T>* seq_;
@@ -36,22 +36,20 @@ public:
         Enumerator(const ArraySequence<T>* seq) : seq_(seq), index_(-1) {}
 
         bool move_next() override {
-            index_++;
+            ++index_;
             return index_ < seq_->GetLength();
         }
 
         const T& get_current() const override {
-            if (index_ < 0 || index_ >= seq_->GetLength()) {
+            if (index_ < 0 || index_ >= seq_->GetLength())
                 throw std::out_of_range("Enumerator is out of range");
-            }
             return seq_->Get(index_);
         }
 
-        void reset() override {
-            index_ = -1;
-        }
+        void reset() override { index_ = -1; }
     };
 
+public:
     IEnumerator<T>* get_enumerator() const override {
         return new Enumerator(this);
     }
@@ -66,6 +64,10 @@ protected:
 
 private:
     DynamicArray<T> items_;
+    int size_;
+    int capacity_;
+
+    void EnsureCapacity(int required);
 };
 
 
@@ -76,14 +78,11 @@ public:
     MutableArraySequence(const T* items, int count);
     MutableArraySequence(const MutableArraySequence<T>& other);
 
-
-    // вложенный Builder
     class Builder {
     private:
         MutableArraySequence<T>* seq_;
     public:
         Builder() : seq_(new MutableArraySequence<T>()) {}
-
         ~Builder() { delete seq_; }
 
         Builder& Append(const T& item);
