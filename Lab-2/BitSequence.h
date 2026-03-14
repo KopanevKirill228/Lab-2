@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class BitSequence {
 public:
@@ -11,9 +11,9 @@ public:
 
     int GetLength() const;
 
-    int Get(int index) const;        // возвращает 0 или 1
-    void Set(int index, int bit);     // устанавливает 0 или 1
-    void Flip(int index);             // инвертирует бит
+    int Get(int index) const;        // РІРѕР·РІСЂР°С‰Р°РµС‚ 0 РёР»Рё 1
+    void Set(int index, int bit);     // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ 0 РёР»Рё 1
+    void Flip(int index);             // РёРЅРІРµСЂС‚РёСЂСѓРµС‚ Р±РёС‚
 
     BitSequence AND(const BitSequence& other) const;
     BitSequence OR(const BitSequence& other)  const;
@@ -31,8 +31,8 @@ public:
 
 private:
     char* data_;
-    int length_;    // количество бит
-    int byteCount_; // количество байт = (length + 7) / 8
+    int length_;    // РєРѕР»РёС‡РµСЃС‚РІРѕ Р±РёС‚
+    int byteCount_; // РєРѕР»РёС‡РµСЃС‚РІРѕ Р±Р°Р№С‚ = (length + 7) / 8
 
     void CheckIndex(int index) const;
 };

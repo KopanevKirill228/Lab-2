@@ -1,7 +1,8 @@
-#pragma once
+п»ї#pragma once
 
 #include "AdaptiveSequence.h"
 
+template <class T>
 void AdaptiveSequence<T>::maybe_switch() {
     if (is_array_ && insert_ops_ > index_ops_ + THRESHOLD) {
         Sequence<T>* new_inner = new MutableListSequence<T>();
@@ -10,8 +11,8 @@ void AdaptiveSequence<T>::maybe_switch() {
                 new_inner->Append(inner_->Get(i));
         }
         catch (...) {
-            delete new_inner;  // чистим если что-то пошло не так
-            throw;             // пробрасываем исключение дальше
+            delete new_inner;  // С‡РёСЃС‚РёРј РµСЃР»Рё С‡С‚Рѕ-С‚Рѕ РїРѕС€Р»Рѕ РЅРµ С‚Р°Рє
+            throw;             // РїСЂРѕР±СЂР°СЃС‹РІР°РµРј РёСЃРєР»СЋС‡РµРЅРёРµ РґР°Р»СЊС€Рµ
         }
         delete inner_;
         inner_ = new_inner;

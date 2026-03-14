@@ -1,4 +1,4 @@
-#include "ListSequence.h"
+﻿#include "ListSequence.h"
 #include <stdexcept>
 
 

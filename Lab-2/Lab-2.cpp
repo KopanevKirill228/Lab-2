@@ -1,355 +1,372 @@
 ﻿#include <iostream>
+#include <stdexcept>
+#include <windows.h>
+
 #include "ArraySequence.h"
 #include "ListSequence.h"
-#include "MapReduce.h"
-#include <clocale>
-#include "Pair.h"
 #include "BitSequence.h"
 #include "AdaptiveSequence.h"
+#include "MapReduce.h"
 
-// Вспомогательная функция для вывода последовательности
-void Print(const Sequence<int>* seq) {
-    std::cout << "[";
-    for (int i = 0; i < seq->GetLength(); ++i) {
-        std::cout << seq->Get(i);
-        if (i < seq->GetLength() - 1)
-            std::cout << ", ";
-    }
-    std::cout << "]" << std::endl;
+void PrintSequence(const Sequence<int>* seq) {
+	std::cout << "[";
+	for (int i = 0; i < seq->GetLength(); ++i) {
+		std::cout << seq->Get(i);
+		if (i < seq->GetLength() - 1) std::cout << ", ";
+	}
+	std::cout << "]" << std::endl;
 }
 
-// Вспомогательная функция для вывода последовательности парами
-void PrintPairs(const Sequence<Pair<int, int>>* seq) {
-    std::cout << "[";
-    for (int i = 0; i < seq->GetLength(); ++i) {
-        std::cout << "(" << seq->Get(i).first << "," << seq->Get(i).second << ")";
-        if (i < seq->GetLength() - 1)
-            std::cout << ", ";
-    }
-    std::cout << "]" << std::endl;
+Sequence<int>* CreateSequence() {
+	std::cout << "\n=== Select Sequence Type ===" << std::endl;
+	std::cout << "1. MutableArraySequence<int>" << std::endl;
+	std::cout << "2. MutableListSequence<int>" << std::endl;
+	std::cout << "3. ImmutableArraySequence<int>" << std::endl;
+	std::cout << "4. ImmutableListSequence<int>" << std::endl;
+	std::cout << "5. AdaptiveSequence<int>" << std::endl;
+	std::cout << "Choice: ";
+	int type; std::cin >> type;
+
+	std::cout << "Enter number of elements: ";
+	int n; std::cin >> n;
+
+	int* data = new int[n];
+	for (int i = 0; i < n; ++i) {
+		std::cout << "  [" << i << "]: ";
+		std::cin >> data[i];
+	}
+
+	Sequence<int>* seq = nullptr;
+	switch (type) {
+	case 1: seq = new MutableArraySequence<int>(data, n);   break;
+	case 2: seq = new MutableListSequence<int>(data, n);    break;
+	case 3: seq = new ImmutableArraySequence<int>(data, n); break;
+	case 4: seq = new ImmutableListSequence<int>(data, n);  break;
+	case 5:
+		seq = new AdaptiveSequence<int>();
+		for (int i = 0; i < n; ++i) seq->Append(data[i]);
+		break;
+	default:
+		std::cout << "Unknown type, using MutableArraySequence\n";
+		seq = new MutableArraySequence<int>(data, n);
+	}
+	delete[] data;
+	return seq;
 }
 
-// Функции для MapReduce
-int Double(const int& x) { return x * 2; }
-bool IsEven(const int& x) { return x % 2 == 0; }
-int Sum(const int& acc, const int& x) { return acc + x; }
+void SequenceMenu(Sequence<int>*& seq) {
+	int cmd = -1;
+	while (cmd != 0) {
+		std::cout << "\n=== Sequence Operations ===" << std::endl;
+		std::cout << "Current: "; PrintSequence(seq);
+		std::cout << "1.  Get element by index" << std::endl;
+		std::cout << "2.  Append" << std::endl;
+		std::cout << "3.  Prepend" << std::endl;
+		std::cout << "4.  InsertAt" << std::endl;
+		std::cout << "5.  GetSubsequence" << std::endl;
+		std::cout << "6.  Concat with new sequence" << std::endl;
+		std::cout << "7.  Map (x * 2)" << std::endl;
+		std::cout << "8.  Where (even only)" << std::endl;
+		std::cout << "9.  Reduce (sum)" << std::endl;
+		std::cout << "10. Zip with new sequence" << std::endl;
+		std::cout << "11. GetFirst / GetLast" << std::endl;
+		std::cout << "12. GetLength" << std::endl;
+		std::cout << "0.  Back" << std::endl;
+		std::cout << "Choice: ";
+		std::cin >> cmd;
+
+		try {
+			if (cmd == 1) {
+				std::cout << "Index: "; int i; std::cin >> i;
+				std::cout << "Value: " << seq->Get(i) << std::endl;
+
+			}
+			else if (cmd == 2) {
+				std::cout << "Value: "; int v; std::cin >> v;
+				Sequence<int>* result = seq->Append(v);
+				if (result != seq) { delete seq; seq = result; }
+				std::cout << "Done." << std::endl;
+
+			}
+			else if (cmd == 3) {
+				std::cout << "Value: "; int v; std::cin >> v;
+				Sequence<int>* result = seq->Prepend(v);
+				if (result != seq) { delete seq; seq = result; }
+				std::cout << "Done." << std::endl;
+
+			}
+			else if (cmd == 4) {
+				std::cout << "Value: "; int v; std::cin >> v;
+				std::cout << "Index: "; int i; std::cin >> i;
+				Sequence<int>* result = seq->InsertAt(v, i);
+				if (result != seq) { delete seq; seq = result; }
+				std::cout << "Done." << std::endl;
+
+			}
+			else if (cmd == 5) {
+				std::cout << "Start index: "; int s; std::cin >> s;
+				std::cout << "End index:   "; int e; std::cin >> e;
+				Sequence<int>* sub = seq->GetSubsequence(s, e);
+				std::cout << "Subsequence: "; PrintSequence(sub);
+				delete sub;
+
+			}
+			else if (cmd == 6) {
+				Sequence<int>* other = CreateSequence();
+				Sequence<int>* result = seq->Concat(*other);
+				std::cout << "Result: "; PrintSequence(result);
+				delete other; delete result;
+
+			}
+			else if (cmd == 7) {
+				Sequence<int>* result = Map<int, int>(seq,
+					[](const int& x) { return x * 2; });
+				std::cout << "Map (x*2): "; PrintSequence(result);
+				delete result;
+
+			}
+			else if (cmd == 8) {
+				Sequence<int>* result = Where<int>(seq,
+					[](const int& x) { return x % 2 == 0; });
+				std::cout << "Where (even): "; PrintSequence(result);
+				delete result;
+
+			}
+			else if (cmd == 9) {
+				int sum = Reduce<int, int>(seq,
+					[](const int& acc, const int& x) { return acc + x; }, 0);
+				std::cout << "Sum: " << sum << std::endl;
+
+			}
+			else if (cmd == 10) {
+				Sequence<int>* other = CreateSequence();
+				Sequence<Pair<int, int>>* zipped = Zip<int, int>(seq, other);
+				std::cout << "Zip result:" << std::endl;
+				for (int i = 0; i < zipped->GetLength(); ++i)
+					std::cout << "  (" << zipped->Get(i).first
+					<< ", " << zipped->Get(i).second << ")\n";
+				delete other; delete zipped;
+
+			}
+			else if (cmd == 11) {
+				std::cout << "First: " << seq->GetFirst() << std::endl;
+				std::cout << "Last:  " << seq->GetLast() << std::endl;
+
+			}
+			else if (cmd == 12) {
+				std::cout << "Length: " << seq->GetLength() << std::endl;
+			}
+
+		}
+		catch (const std::exception& e) {
+			std::cout << "Error: " << e.what() << std::endl;
+		}
+	}
+}
+
+void BitSequenceMenu() {
+	std::cout << "Enter number of bits: ";
+	int n; std::cin >> n;
+	BitSequence bs(n);
+
+	int cmd = -1;
+	while (cmd != 0) {
+		std::cout << "\n=== BitSequence ===" << std::endl;
+		std::cout << "Current: "; bs.Print();
+		std::cout << "1. Set bit" << std::endl;
+		std::cout << "2. Get bit" << std::endl;
+		std::cout << "3. Flip bit" << std::endl;
+		std::cout << "4. AND with new" << std::endl;
+		std::cout << "5. OR with new" << std::endl;
+		std::cout << "6. XOR with new" << std::endl;
+		std::cout << "7. NOT" << std::endl;
+		std::cout << "0. Back" << std::endl;
+		std::cout << "Choice: ";
+		std::cin >> cmd;
+
+		try {
+			if (cmd == 1) {
+				std::cout << "Index: "; int i; std::cin >> i;
+				std::cout << "Bit (0/1): "; int b; std::cin >> b;
+				bs.Set(i, b);
+
+			}
+			else if (cmd == 2) {
+				std::cout << "Index: "; int i; std::cin >> i;
+				std::cout << "Bit[" << i << "] = " << bs.Get(i) << std::endl;
+
+			}
+			else if (cmd == 3) {
+				std::cout << "Index: "; int i; std::cin >> i;
+				bs.Flip(i);
+
+			}
+			else if (cmd == 4) {
+				BitSequence other(n);
+				std::cout << "Enter " << n << " bits:\n";
+				for (int i = 0; i < n; ++i) {
+					std::cout << "  [" << i << "]: "; int b; std::cin >> b;
+					other.Set(i, b);
+				}
+				BitSequence result = bs.AND(other);
+				std::cout << "AND: "; result.Print();
+
+			}
+			else if (cmd == 5) {
+				BitSequence other(n);
+				std::cout << "Enter " << n << " bits:\n";
+				for (int i = 0; i < n; ++i) {
+					std::cout << "  [" << i << "]: "; int b; std::cin >> b;
+					other.Set(i, b);
+				}
+				BitSequence result = bs.OR(other);
+				std::cout << "OR: "; result.Print();
+
+			}
+			else if (cmd == 6) {
+				BitSequence other(n);
+				std::cout << "Enter " << n << " bits:\n";
+				for (int i = 0; i < n; ++i) {
+					std::cout << "  [" << i << "]: "; int b; std::cin >> b;
+					other.Set(i, b);
+				}
+				BitSequence result = bs.XOR(other);
+				std::cout << "XOR: "; result.Print();
+
+			}
+			else if (cmd == 7) {
+				BitSequence result = bs.NOT();
+				std::cout << "NOT: "; result.Print();
+			}
+
+		}
+		catch (const std::exception& e) {
+			std::cout << "Error: " << e.what() << std::endl;
+		}
+	}
+}
+
+void AlgorithmsMenu() {
+	Sequence<int>* seq = CreateSequence();
+
+	int cmd = -1;
+	while (cmd != 0) {
+		std::cout << "\n=== Algorithms ===" << std::endl;
+		std::cout << "Current: "; PrintSequence(seq);
+		std::cout << "1. Min / Max / Avg" << std::endl;
+		std::cout << "2. Median" << std::endl;
+		std::cout << "3. Count inversions" << std::endl;
+		std::cout << "4. All prefixes" << std::endl;
+		std::cout << "5. All suffixes" << std::endl;
+		std::cout << "6. Moving average" << std::endl;
+		std::cout << "7. Sqrt variance per element" << std::endl;
+		std::cout << "8. Mirror sum" << std::endl;
+		std::cout << "0. Back" << std::endl;
+		std::cout << "Choice: ";
+		std::cin >> cmd;
+
+		try {
+			if (cmd == 1) {
+				auto res = GetMinMaxAvg(*seq);
+				std::cout << "Min: " << res.min
+					<< "  Max: " << res.max
+					<< "  Avg: " << res.avg << std::endl;
+
+			}
+			else if (cmd == 2) {
+				std::cout << "Median: " << GetMedian(*seq) << std::endl;
+
+			}
+			else if (cmd == 3) {
+				std::cout << "Inversions: " << CountInversions(*seq) << std::endl;
+
+			}
+			else if (cmd == 4) {
+				auto* prefixes = GetPrefixes(*seq);
+				std::cout << "Prefixes:" << std::endl;
+				for (int i = 0; i < prefixes->GetLength(); ++i) {
+					std::cout << "  "; PrintSequence(prefixes->Get(i));
+				}
+				for (int i = 0; i < prefixes->GetLength(); ++i) delete prefixes->Get(i);
+				delete prefixes;
+
+			}
+			else if (cmd == 5) {
+				auto* suffixes = GetSuffixes(*seq);
+				std::cout << "Suffixes:" << std::endl;
+				for (int i = 0; i < suffixes->GetLength(); ++i) {
+					std::cout << "  "; PrintSequence(suffixes->Get(i));
+				}
+				for (int i = 0; i < suffixes->GetLength(); ++i) delete suffixes->Get(i);
+				delete suffixes;
+
+			}
+			else if (cmd == 6) {
+				auto* avg = GetMovingAverage(*seq);
+				std::cout << "Moving average: [";
+				for (int i = 0; i < avg->GetLength(); ++i) {
+					std::cout << avg->Get(i);
+					if (i < avg->GetLength() - 1) std::cout << ", ";
+				}
+				std::cout << "]" << std::endl;
+				delete avg;
+
+			}
+			else if (cmd == 7) {
+				auto* sv = GetSqrtVariance(*seq);
+				std::cout << "Sqrt variance: [";
+				for (int i = 0; i < sv->GetLength(); ++i) {
+					std::cout << sv->Get(i);
+					if (i < sv->GetLength() - 1) std::cout << ", ";
+				}
+				std::cout << "]" << std::endl;
+				delete sv;
+
+			}
+			else if (cmd == 8) {
+				auto* ms = GetMirrorSum(*seq);
+				std::cout << "Mirror sum: "; PrintSequence(ms);
+				delete ms;
+			}
+
+		}
+		catch (const std::exception& e) {
+			std::cout << "Error: " << e.what() << std::endl;
+		}
+	}
+	delete seq;
+}
 
 int main() {
-    setlocale(LC_ALL, "Russian");
-    std::cout << "=== Тест ArraySequence ===" << std::endl;
-
-    int data[] = { 1, 2, 3, 4, 5 };
-    MutableArraySequence<int> seq(data, 5);
-
-    // Базовые операции
-    std::cout << "Исходная: ";
-    Print(&seq);
-
-    std::cout << "GetFirst: " << seq.GetFirst() << std::endl;  // 1
-    std::cout << "GetLast:  " << seq.GetLast() << std::endl;  // 5
-    std::cout << "Get(2):   " << seq.Get(2) << std::endl;  // 3
-    std::cout << "Length:   " << seq.GetLength() << std::endl; // 5
-
-    // Append
-    seq.Append(6);
-    std::cout << "После Append(6): ";
-    Print(&seq);  // [1,2,3,4,5,6]
-
-    // Prepend
-    seq.Prepend(0);
-    std::cout << "После Prepend(0): ";
-    Print(&seq);  // [0,1,2,3,4,5,6]
-
-    // InsertAt
-    seq.InsertAt(99, 3);
-    std::cout << "После InsertAt(99, 3): ";
-    Print(&seq);  // [0,1,2,99,3,4,5,6]
-
-    // GetSubsequence
-    Sequence<int>* sub = seq.GetSubsequence(1, 3);
-    std::cout << "GetSubsequence(1,3): ";
-    Print(sub);   // [1,2,99]
-    delete sub;
-
-    // Concat
-    int data2[] = { 10, 20 };
-    MutableArraySequence<int> seq2(data2, 2);
-    Sequence<int>* concat = seq.Concat(seq2);
-    std::cout << "После Concat([10,20]): ";
-    Print(concat);
-    delete concat;
-
-    std::cout << std::endl;
-    std::cout << "=== Тест MapReduce ===" << std::endl;
-
-    int data3[] = { 1, 2, 3, 4, 5 };
-    MutableArraySequence<int> seq3(data3, 5);
-
-    // Map
-    Sequence<int>* doubled = Map<int, int>(&seq3, Double);
-    std::cout << "Map (x*2):      ";
-    Print(doubled);   // [2,4,6,8,10]
-    delete doubled;
-
-    // Where
-    Sequence<int>* evens = Where<int>(&seq3, IsEven);
-    std::cout << "Where (чётные): ";
-    Print(evens);     // [2,4]
-    delete evens;
-
-    // Reduce
-    int sum = Reduce<int, int>(&seq3, Sum, 0);
-    std::cout << "Reduce (сумма): " << sum << std::endl;  // 15
-
-    std::cout << std::endl;
-    std::cout << "=== Тест ListSequence ===" << std::endl;
-
-    int data4[] = { 5, 10, 15 };
-    MutableListSequence<int> listSeq(data4, 3);
-
-    std::cout << "Исходная: ";
-    Print(&listSeq);           // [5,10,15]
-
-    listSeq.Append(20);
-    std::cout << "После Append(20): ";
-    Print(&listSeq);           // [5,10,15,20]
-
-    std::cout << "GetFirst: " << listSeq.GetFirst() << std::endl;  // 5
-    std::cout << "GetLast:  " << listSeq.GetLast() << std::endl;  // 20
-
-    std::cout << std::endl;
-
-    std::cout << "=== Тест Zip/Unzip ===" << std::endl;
-
-    int dataA[] = { 1, 2, 3 };
-    int dataB[] = { 10, 20, 30 };
-    MutableArraySequence<int> seqA(dataA, 3);
-    MutableArraySequence<int> seqB(dataB, 3);
-
-    // Zip
-    Sequence<Pair<int, int>>* zipped = Zip<int, int>(&seqA, &seqB);
-    std::cout << "Zip: ";
-    PrintPairs(zipped);  // [(1,10), (2,20), (3,30)]
-
-    // Unzip
-    Sequence<int>* unzipFirst = nullptr;
-    Sequence<int>* unzipSecond = nullptr;
-    Unzip<int, int>(zipped, unzipFirst, unzipSecond);
-
-    std::cout << "Unzip первая:  ";
-    Print(unzipFirst);   // [1, 2, 3]
-    std::cout << "Unzip вторая: ";
-    Print(unzipSecond);  // [10, 20, 30]
-
-    delete zipped;
-    delete unzipFirst;
-    delete unzipSecond;
-
-
-    std::cout << "=== Тест BitSequence ===" << std::endl;
-
-    BitSequence a(8);  // 8 бит, все 0
-    BitSequence b(8);
-
-    // a = 10110100
-    a.Set(1, 1);
-    a.Set(2, 1);
-    a.Set(4, 1);
-    a.Set(6, 1);
-
-    // b = 11001010
-    b.Set(1, 1);
-    b.Set(3, 1);
-    b.Set(6, 1);
-    b.Set(7, 1);
-
-    std::cout << "A:       "; a.Print();
-    std::cout << "B:       "; b.Print();
-
-    BitSequence andResult = a.AND(b);
-    std::cout << "A AND B: "; andResult.Print();
-
-    BitSequence orResult = a.OR(b);
-    std::cout << "A OR  B: "; orResult.Print();
-
-    BitSequence xorResult = a.XOR(b);
-    std::cout << "A XOR B: "; xorResult.Print();
-
-    BitSequence notResult = a.NOT();
-    std::cout << "NOT A:   "; notResult.Print();
-
-
-
-
-    std::cout << "=== Тест операторов ===" << std::endl;
-
-    int dataOp[] = { 1, 2, 3, 4, 5 };
-    MutableArraySequence<int> seqOp(dataOp, 5);
-
-    std::cout << "seqOp[0]: " << seqOp[0] << std::endl;  // 1
-    std::cout << "seqOp[4]: " << seqOp[4] << std::endl;  // 5
-
-    int dataOp2[] = { 6, 7 };
-    MutableArraySequence<int> seqOp2(dataOp2, 2);
-
-    Sequence<int>* concatOp = seqOp + seqOp2;
-    std::cout << "seqOp + seqOp2: ";
-    Print(concatOp);  // [1, 2, 3, 4, 5, 6, 7]
-    delete concatOp;
-
-    std::cout << "=== Тест BitSequence операторов ===" << std::endl;
-
-    BitSequence bitA(4), bitB(4);
-    // bitA = [1, 0, 1, 0]
-    bitA.Set(0, 1);
-    bitA.Set(2, 1);
-
-    // bitB = [0, 1, 1, 0]
-    bitB.Set(1, 1);
-    bitB.Set(2, 1);
-
-    std::cout << "bitA:       "; bitA.Print();         // [1, 0, 1, 0]
-    std::cout << "bitB:       "; bitB.Print();         // [0, 1, 1, 0]
-    std::cout << "bitA & bitB: "; (bitA& bitB).Print(); // [0, 0, 1, 0]
-    std::cout << "bitA | bitB: "; (bitA | bitB).Print(); // [1, 1, 1, 0]
-    std::cout << "bitA ^ bitB: "; (bitA^ bitB).Print(); // [1, 1, 0, 0]
-    std::cout << "~bitA:       "; (~bitA).Print();        // [0, 1, 0, 1]
-
-
-
-
-
-
-    MutableArraySequence<int> seq1;
-    seq1.Append(10);
-    seq1.Append(20);
-    seq1.Append(30);
-    seq1.Append(40);
-
-    // Тестируем итератор
-    std::cout << "Iterating via IEnumerator: ";
-    IEnumerator<int>* en = seq1.get_enumerator();
-    while (en->move_next()) {
-        std::cout << en->get_current() << " ";
-    }
-    delete en;
-    std::cout << std::endl;
-
-    // Тест reset
-    std::cout << "After reset: ";
-    en = seq1.get_enumerator();
-    en->move_next();
-    en->move_next(); // на 20
-    std::cout << "Current: " << en->get_current() << std::endl; // 20
-    en->reset();
-    en->move_next(); // снова на 10
-    std::cout << "After reset current: " << en->get_current() << std::endl; // 10
-    delete en;
-
-
-
-
-    AdaptiveSequence<int> seq4;
-    seq4.Append(1);
-    seq4.Append(2);
-    seq4.Append(3);
-
-    std::cout << "Initially array: " << seq4.IsArray() << std::endl; // 1
-
-    // Много вставок — должен переключиться на List
-    for (int i = 0; i < 15; i++)
-        seq4.Prepend(i);
-
-    std::cout << "After many Prepend, is array: " << seq4.IsArray() << std::endl; // 0
-
-    // Много чтений — должен переключиться обратно на Array
-    for (int i = 0; i < 25; i++)
-        seq4.Get(0);
-
-    std::cout << "After many Get, is array: " << seq4.IsArray() << std::endl; // 1
-
-
-
-    // ArraySequence Builder
-    MutableArraySequence<int>* seq5 = MutableArraySequence<int>::Builder()
-        .Append(1)
-        .Append(2)
-        .Append(3)
-        .Build();
-    std::cout << "ArraySequence Builder: ";
-    for (int i = 0; i < seq5->GetLength(); i++)
-        std::cout << seq5->Get(i) << " ";
-    std::cout << std::endl; // 1 2 3
-
-    // ListSequence Builder
-    int arr[] = { 10, 20, 30 };
-    MutableListSequence<int>* seq6 = MutableListSequence<int>::Builder()
-        .AppendAll(arr, 3)
-        .Append(40)
-        .Build();
-    std::cout << "ListSequence Builder: ";
-    for (int i = 0; i < seq6->GetLength(); i++)
-        std::cout << seq6->Get(i) << " ";
-    std::cout << std::endl; // 10 20 30 40
-
-    delete seq6;
-    delete seq5;
-
-
-
-    int data5[] = { 3, 1, 4, 1, 5, 9, 2, 6 };
-    MutableArraySequence<int> testSeq(data5, 8);
-
-    // П-1
-    auto stats = GetMinMaxAvg(testSeq);
-    std::cout << "Min=" << stats.min << " Max=" << stats.max
-        << " Avg=" << stats.avg << std::endl;
-
-    // П-2
-    std::cout << "Median=" << GetMedian(testSeq) << std::endl;
-
-    // П-3
-    std::cout << "Inversions=" << CountInversions(testSeq) << std::endl;
-
-    // П-5 префиксы
-    auto* prefixes = GetPrefixes(testSeq);
-    std::cout << "Prefixes:" << std::endl;
-    for (int i = 0; i < prefixes->GetLength(); i++) {
-        auto* prefix = prefixes->Get(i);
-        std::cout << "  [";
-        for (int j = 0; j < prefix->GetLength(); j++) {
-            std::cout << prefix->Get(j);
-            if (j < prefix->GetLength() - 1) std::cout << ", ";
-        }
-        std::cout << "]" << std::endl;
-    }
-
-    // П-6
-    auto* movingAvg = GetMovingAverage(testSeq);
-    std::cout << "Moving avg: ";
-    for (int i = 0; i < movingAvg->GetLength(); i++)
-        std::cout << movingAvg->Get(i) << " ";
-    std::cout << std::endl;
-
-    // П-7
-    auto* sqrtVar = GetSqrtVariance(testSeq);
-    std::cout << "Sqrt variance: ";
-    for (int i = 0; i < sqrtVar->GetLength(); i++)
-        std::cout << sqrtVar->Get(i) << " ";
-    std::cout << std::endl;
-
-    // П-8
-    auto* mirrorSum = GetMirrorSum(testSeq);
-    std::cout << "Mirror sum: ";
-    for (int i = 0; i < mirrorSum->GetLength(); i++)
-        std::cout << mirrorSum->Get(i) << " ";
-    std::cout << std::endl;
-
-    delete movingAvg;
-    delete sqrtVar;
-    delete mirrorSum;
-
-    std::cout << "=== Все тесты пройдены ===" << std::endl;
-
-    return 0;
+	SetConsoleOutputCP(65001);
+	std::cout << "=== Lab 2 - Sequences ===" << std::endl;
+
+	int cmd = -1;
+	while (cmd != 0) {
+		std::cout << "\n=== Main Menu ===" << std::endl;
+		std::cout << "1. Work with Sequence<int>" << std::endl;
+		std::cout << "2. Work with BitSequence" << std::endl;
+		std::cout << "3. Algorithms (P1-P8)" << std::endl;
+		std::cout << "0. Exit" << std::endl;
+		std::cout << "Choice: ";
+		std::cin >> cmd;
+
+		if (cmd == 1) {
+			Sequence<int>* seq = CreateSequence();
+			SequenceMenu(seq);
+			delete seq;
+		}
+		else if (cmd == 2) {
+			BitSequenceMenu();
+		}
+		else if (cmd == 3) {
+			AlgorithmsMenu();
+		}
+		else if (cmd != 0) {
+			std::cout << "Unknown command." << std::endl;
+		}
+	}
+
+	std::cout << "Bye!" << std::endl;
+	return 0;
 }

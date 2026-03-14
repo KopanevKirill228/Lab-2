@@ -1,4 +1,4 @@
-#include "BitSequence.h"
+ï»¿#include "BitSequence.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -10,7 +10,7 @@ BitSequence::BitSequence(int size) {
     if (size < 0)
         throw std::invalid_argument("Size cannot be negative");
     length_ = size;
-    byteCount_ = (size + 7) / 8;  // îêðóãëåíèå ââåðõ
+    byteCount_ = (size + 7) / 8;  // Ð¾ÐºÑ€ÑƒÐ³Ð»ÐµÐ½Ð¸Ðµ Ð²Ð²ÐµÑ€Ñ…
     data_ = new char[byteCount_];
     for (int i = 0; i < byteCount_; ++i)
         data_[i] = 0;
@@ -76,16 +76,16 @@ void BitSequence::Set(int index, int bit) {
     int byte = index / 8;
     int pos = index % 8;
     if (bit == 1)
-        data_[byte] |= (1 << pos);  // óñòàíîâèòü â 1
+        data_[byte] |= (1 << pos);  // ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð² 1
     else
-        data_[byte] &= ~(1 << pos);  // óñòàíîâèòü â 0
+        data_[byte] &= ~(1 << pos);  // ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ð² 0
 }
 
 void BitSequence::Flip(int index) {
     CheckIndex(index);
     int byte = index / 8;
     int pos = index % 8;
-    data_[byte] ^= (1 << pos);  // XOR ñ 1 èíâåðòèðóåò áèò
+    data_[byte] ^= (1 << pos);  // XOR Ñ 1 Ð¸Ð½Ð²ÐµÑ€Ñ‚Ð¸Ñ€ÑƒÐµÑ‚ Ð±Ð¸Ñ‚
 }
 
 BitSequence BitSequence::AND(const BitSequence& other) const {
@@ -119,7 +119,7 @@ BitSequence BitSequence::NOT() const {
     BitSequence result(length_);
     for (int i = 0; i < byteCount_; ++i)
         result.data_[i] = ~data_[i];
-    // îáíóëÿåì ëèøíèå áèòû â ïîñëåäíåì áàéòå
+    // Ð¾Ð±Ð½ÑƒÐ»ÑÐµÐ¼ Ð»Ð¸ÑˆÐ½Ð¸Ðµ Ð±Ð¸Ñ‚Ñ‹ Ð² Ð¿Ð¾ÑÐ»ÐµÐ´Ð½ÐµÐ¼ Ð±Ð°Ð¹Ñ‚Ðµ
     int extraBits = byteCount_ * 8 - length_;
     if (extraBits > 0)
         result.data_[byteCount_ - 1] &= (1 << (8 - extraBits)) - 1;

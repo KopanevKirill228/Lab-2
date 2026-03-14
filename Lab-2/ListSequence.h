@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <stdexcept>
 #include "Sequence.h"
@@ -77,7 +77,7 @@ public:
     MutableListSequence(const LinkedList<T>& list);
     MutableListSequence(const MutableListSequence<T>& other);
 
-    // вложенный Builder
+    // РІР»РѕР¶РµРЅРЅС‹Р№ Builder
     class Builder {
     private:
         MutableListSequence<T>* seq_;
