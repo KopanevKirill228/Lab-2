@@ -1,9 +1,11 @@
 #pragma once
+
 #include "Sequence.h"
 #include "ArraySequence.h"
 #include "Pair.h"
 #include <cmath>
 #include <stack>
+#include <stdexcept>
 
 // MAP
 // Принимает последовательность T, функцию T->U
@@ -104,28 +106,6 @@ Sequence<Sequence<T>*>* UnZipN(const Sequence<Sequence<T>*>* seqs) {
 }
 
 
-// ===== вспомогательные map/reduce =====
-
-// Map: применяет функцию к каждому элементу
-template <class T, class R>
-MutableArraySequence<R>* Map(const Sequence<T>& seq, R(*func)(T)) {
-    MutableArraySequence<R>* result = new MutableArraySequence<R>();
-    for (int i = 0; i < seq.GetLength(); i++)
-        result->Append(func(seq.Get(i)));
-    return result;
-}
-
-// Reduce: свёртка последовательности
-template <class T, class R>
-R Reduce(const Sequence<T>& seq, R(*func)(R, T), R init) {
-    R acc = init;
-    for (int i = 0; i < seq.GetLength(); i++)
-        acc = func(acc, seq.Get(i));
-    return acc;
-}
-
-
-
 // П-1: min, max, avg за один проход
 
 template <class T>
@@ -140,7 +120,7 @@ MinMaxAvg<T> GetMinMaxAvg(const Sequence<T>& seq) {
     double sum = 0;
 
     for (int i = 0; i < seq.GetLength(); i++) {
-        T val = seq.Get(i);
+        const T& val = seq.Get(i);
         if (val < mn) mn = val;
         if (val > mx) mx = val;
         sum += val;

@@ -5,7 +5,7 @@
 #include <clocale>
 #include "Pair.h"
 #include "BitSequence.h"
-#include "Adaptive_Sequence.h"
+#include "AdaptiveSequence.h"
 
 // Вспомогательная функция для вывода последовательности
 void Print(const Sequence<int>* seq) {

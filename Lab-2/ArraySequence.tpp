@@ -18,21 +18,21 @@ ArraySequence<T>::ArraySequence(const ArraySequence<T>& other)
 }
 
 template <class T>
-T ArraySequence<T>::GetFirst() const {
+const T& ArraySequence<T>::GetFirst() const {
     if (items_.GetSize() == 0)
         throw std::out_of_range("Sequence is empty");
     return items_.Get(0);
 }
 
 template <class T>
-T ArraySequence<T>::GetLast() const {
+const T& ArraySequence<T>::GetLast() const {
     if (items_.GetSize() == 0)
         throw std::out_of_range("Sequence is empty");
     return items_.Get(items_.GetSize() - 1);
 }
 
 template <class T>
-T ArraySequence<T>::Get(int index) const {
+const T& ArraySequence<T>::Get(int index) const {
     return items_.Get(index);
 }
 
@@ -44,7 +44,7 @@ int ArraySequence<T>::GetLength() const {
 template <class T>
 void ArraySequence<T>::AppendInternal(const T& item) {
     int size = items_.GetSize();
-    items_.Resize(size + 1);
+    items_.Resize(size + 1); // квадратично. выделять память с запасом.
     items_.Set(size, item);
 }
 

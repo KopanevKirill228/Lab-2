@@ -58,7 +58,7 @@ void DynamicArray<T>::CheckIndex(int index) const {
 }
 
 template <class T>
-T DynamicArray<T>::Get(int index) const {
+const T& DynamicArray<T>::Get(int index) const {
     CheckIndex(index);
     return data_[index];
 }

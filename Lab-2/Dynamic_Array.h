@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 template <class T>
-
 class DynamicArray {
 public:
     DynamicArray();
@@ -17,12 +16,10 @@ public:
 
     ~DynamicArray();
 
-    T Get(int index) const;
-
+    const T& Get(int index) const;
     int GetSize() const;
 
     void Set(int index, const T& value);
-
     void Resize(int newSize);
 
     T& operator[](int index);
@@ -35,4 +32,4 @@ private:
     void CheckIndex(int index) const;
 };
 
-#include "Dynamic_Array_impl.h"
+#include "Dynamic_Array.tpp"

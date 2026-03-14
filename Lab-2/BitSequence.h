@@ -11,7 +11,7 @@ public:
 
     int GetLength() const;
 
-    int  Get(int index) const;        // возвращает 0 или 1
+    int Get(int index) const;        // возвращает 0 или 1
     void Set(int index, int bit);     // устанавливает 0 или 1
     void Flip(int index);             // инвертирует бит
 
@@ -22,7 +22,7 @@ public:
 
     void Print() const;
 
-    int  operator[](int index) const;
+    int operator[](int index) const;
     bool operator==(const BitSequence& other) const;
     BitSequence operator&(const BitSequence& other) const;
     BitSequence operator|(const BitSequence& other) const;
@@ -37,4 +37,4 @@ private:
     void CheckIndex(int index) const;
 };
 
-#include "BitSequence_impl.h"
+#include "BitSequence.tpp"

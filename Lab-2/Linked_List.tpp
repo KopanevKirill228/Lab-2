@@ -81,21 +81,21 @@ void LinkedList<T>::Clear() {
 }
 
 template <class T>
-T LinkedList<T>::GetFirst() const {
+const T& LinkedList<T>::GetFirst() const {
     if (length_ == 0)
         throw std::out_of_range("List is empty");
     return head_->data;
 }
 
 template <class T>
-T LinkedList<T>::GetLast() const {
+const T& LinkedList<T>::GetLast() const {
     if (length_ == 0)
         throw std::out_of_range("List is empty");
     return tail_->data;
 }
 
 template <class T>
-T LinkedList<T>::Get(int index) const {
+const T& LinkedList<T>::Get(int index) const {
     return GetNode(index)->data;
 }
 
@@ -143,11 +143,17 @@ template <class T>
 void LinkedList<T>::InsertAt(const T& item, int index) {
     if (index < 0 || index > length_)
         throw std::out_of_range("Index is out of range");
-    if (index == 0) { Prepend(item); return; }
-    if (index == length_) { Append(item); return; }
-    Node* prev = GetNode(index - 1);
-    Node* newNode = new Node(item, prev->next);
-    prev->next = newNode;
+
+    Node** current = &head_;
+
+    for (int i = 0; i < index; ++i)
+        current = &(*current)->next;
+
+    *current = new Node(item, *current);
+
+    if ((*current)->next == nullptr)
+        tail_ = *current;
+
     ++length_;
 }
 

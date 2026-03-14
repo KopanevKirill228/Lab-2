@@ -3,6 +3,7 @@
 #include "Sequence.h"
 #include "Dynamic_Array.h"
 #include "ienumerator.h"
+#include <stdexcept>
 
 template <class T>
 class ArraySequence : public Sequence<T> {
@@ -12,9 +13,9 @@ public:
     ArraySequence(const ArraySequence<T>& other);
     virtual ~ArraySequence() = default;
 
-    T GetFirst() const override;
-    T GetLast() const override;
-    T Get(int index) const override;
+    const T& GetFirst() const override;
+    const T& GetLast() const override;
+    const T& Get(int index) const override;
     int GetLength() const override;
 
     Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override;
@@ -40,6 +41,9 @@ public:
         }
 
         const T& get_current() const override {
+            if (index_ < 0 || index_ >= seq_->GetLength()) {
+                throw std::out_of_range("Enumerator is out of range");
+            }
             return seq_->Get(index_);
         }
 
@@ -106,4 +110,4 @@ protected:
     ArraySequence<T>* Clone() const override;
 };
 
-#include "ArraySequence_impl.h"
+#include "ArraySequence.tpp"

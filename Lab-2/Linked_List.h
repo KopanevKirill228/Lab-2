@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-template <class T>
 
+template <class T>
 class LinkedList {
 public:
 
@@ -11,9 +11,9 @@ public:
     LinkedList<T>& operator=(const LinkedList<T>& other);
     ~LinkedList();
 
-    T GetFirst() const;
-    T GetLast() const;
-    T Get(int index) const;
+    const T& GetFirst() const; // было T GetFirst() const
+    const T& GetLast() const;
+    const T& Get(int index) const;
 
     int GetLength() const;
     void Append(const T& item);
@@ -36,5 +36,5 @@ private:
     void Clear();
 };
 
-#include "Linked_List_impl.h"
+#include "Linked_List.tpp"
 

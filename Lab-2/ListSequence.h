@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include "Sequence.h"
 #include "Linked_List.h"
 #include "ienumerator.h"
@@ -13,9 +14,9 @@ public:
     ListSequence(const ListSequence<T>& other);
     virtual ~ListSequence() = default;
 
-    T GetFirst() const override;
-    T GetLast() const override;
-    T Get(int index) const override;
+    const T& GetFirst() const override;
+    const T& GetLast() const override;
+    const T& Get(int index) const override;
     int GetLength() const override;
 
     Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override;
@@ -41,6 +42,9 @@ public:
         }
 
         const T& get_current() const override {
+            if (index_ < 0 || index_ >= seq_->GetLength()) {
+                throw std::out_of_range("Enumerator is out of range");
+            }
             return seq_->Get(index_);
         }
 
@@ -107,4 +111,4 @@ protected:
 };
 
 
-#include "ListSequence_impl.h"
+#include "ListSequence.tpp"

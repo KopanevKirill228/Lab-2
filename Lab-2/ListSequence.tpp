@@ -23,19 +23,20 @@ ListSequence<T>::ListSequence(const ListSequence<T>& other)
 }
 
 template <class T>
-T ListSequence<T>::GetFirst() const {
+const T& ListSequence<T>::GetFirst() const {
     return items_.GetFirst();
 }
 
 template <class T>
-T ListSequence<T>::GetLast() const {
+const T& ListSequence<T>::GetLast() const {
     return items_.GetLast();
 }
 
 template <class T>
-T ListSequence<T>::Get(int index) const {
+const T& ListSequence<T>::Get(int index) const {
     return items_.Get(index);
 }
+
 
 template <class T>
 int ListSequence<T>::GetLength() const {
