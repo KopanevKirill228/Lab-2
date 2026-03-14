@@ -36,12 +36,11 @@ void AdaptiveSequence<T>::maybe_switch() {
     }
 }
 
-
 template <class T>
 AdaptiveSequence<T>::AdaptiveSequence()
-    : inner_(new MutableArraySequence<T>()),
-    index_ops_(0), insert_ops_(0), is_array_(true) {
+    : index_ops_(0), insert_ops_(0), is_array_(true), inner_(new MutableArraySequence<T>()) {
 }
+
 
 template <class T>
 AdaptiveSequence<T>::~AdaptiveSequence() {
