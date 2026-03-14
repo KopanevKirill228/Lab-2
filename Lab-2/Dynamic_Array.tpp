@@ -19,6 +19,8 @@ template <class T>
 DynamicArray<T>::DynamicArray(const T* items, int count) {
     if (count < 0)
         throw std::invalid_argument("Count cannot be negative");
+    if (items == nullptr && count > 0)
+        throw std::invalid_argument("Items cannot be null");
     size_ = count;
     data_ = (size_ > 0) ? new T[size_] : nullptr;
     for (int i = 0; i < size_; ++i)

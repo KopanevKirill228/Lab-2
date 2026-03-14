@@ -8,8 +8,12 @@ ListSequence<T>::ListSequence()
 }
 
 template <class T>
-ListSequence<T>::ListSequence(const T* items, int count)
-    : items_(items, count) {
+ListSequence<T>::ListSequence(const T* items, int count) {
+    if (count < 0)
+        throw std::invalid_argument("Count cannot be negative");
+    if (items == nullptr && count > 0)
+        throw std::invalid_argument("Items cannot be null");
+    items_ = LinkedList<T>(items, count);
 }
 
 template <class T>
@@ -81,6 +85,9 @@ Sequence<T>* ListSequence<T>::InsertAt(const T& item, int index) {
 
 template <class T>
 Sequence<T>* ListSequence<T>::GetSubsequence(int startIndex, int endIndex) const {
+    if (startIndex < 0 || endIndex < 0 ||
+        endIndex >= GetLength() || startIndex > endIndex)
+        throw std::out_of_range("Invalid subsequence range");
     LinkedList<T> subList = items_.GetSubList(startIndex, endIndex);
     return new MutableListSequence<T>(subList);
 }
@@ -182,6 +189,10 @@ MutableListSequence<T>::Builder::Append(const T& item) {
 template <class T>
 typename MutableListSequence<T>::Builder&
 MutableListSequence<T>::Builder::AppendAll(const T* items, int count) {
+    if (count < 0)
+        throw std::invalid_argument("Count cannot be negative");
+    if (items == nullptr && count > 0)
+        throw std::invalid_argument("Items cannot be null");
     for (int i = 0; i < count; i++)
         seq_->Append(items[i]);
     return *this;

@@ -1,5 +1,4 @@
-#ifndef IENUMERATOR_H
-#define IENUMERATOR_H
+#pragma once
 
 template <class T>
 class IEnumerator {
@@ -10,4 +9,4 @@ public:
     virtual void reset() = 0;
 };
 
-#endif
+

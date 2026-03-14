@@ -8,8 +8,12 @@ ArraySequence<T>::ArraySequence()
 }
 
 template <class T>
-ArraySequence<T>::ArraySequence(const T* items, int count)
-    : items_(items, count) {
+ArraySequence<T>::ArraySequence(const T* items, int count) {
+    if (count < 0)
+        throw std::invalid_argument("Count cannot be negative");
+    if (items == nullptr && count > 0)
+        throw std::invalid_argument("Items cannot be null");
+    items_ = DynamicArray<T>(items, count);
 }
 
 template <class T>
@@ -184,6 +188,10 @@ MutableArraySequence<T>::Builder::Append(const T& item) {
 template <class T>
 typename MutableArraySequence<T>::Builder&
 MutableArraySequence<T>::Builder::AppendAll(const T* items, int count) {
+    if (count < 0)
+        throw std::invalid_argument("Count cannot be negative");
+    if (items == nullptr && count > 0)
+        throw std::invalid_argument("Items cannot be null");
     for (int i = 0; i < count; i++)
         seq_->Append(items[i]);
     return *this;

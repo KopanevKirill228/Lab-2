@@ -2,12 +2,17 @@
 
 #include "AdaptiveSequence.h"
 
-template <class T>
 void AdaptiveSequence<T>::maybe_switch() {
     if (is_array_ && insert_ops_ > index_ops_ + THRESHOLD) {
         Sequence<T>* new_inner = new MutableListSequence<T>();
-        for (int i = 0; i < inner_->GetLength(); i++)
-            new_inner->Append(inner_->Get(i));
+        try {
+            for (int i = 0; i < inner_->GetLength(); i++)
+                new_inner->Append(inner_->Get(i));
+        }
+        catch (...) {
+            delete new_inner;  // чистим если что-то пошло не так
+            throw;             // пробрасываем исключение дальше
+        }
         delete inner_;
         inner_ = new_inner;
         is_array_ = false;
@@ -15,14 +20,21 @@ void AdaptiveSequence<T>::maybe_switch() {
     }
     else if (!is_array_ && index_ops_ > insert_ops_ + THRESHOLD) {
         Sequence<T>* new_inner = new MutableArraySequence<T>();
-        for (int i = 0; i < inner_->GetLength(); i++)
-            new_inner->Append(inner_->Get(i));
+        try {
+            for (int i = 0; i < inner_->GetLength(); i++)
+                new_inner->Append(inner_->Get(i));
+        }
+        catch (...) {
+            delete new_inner;
+            throw;
+        }
         delete inner_;
         inner_ = new_inner;
         is_array_ = true;
         index_ops_ = insert_ops_ = 0;
     }
 }
+
 
 template <class T>
 AdaptiveSequence<T>::AdaptiveSequence()

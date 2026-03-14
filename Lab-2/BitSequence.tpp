@@ -17,6 +17,10 @@ BitSequence::BitSequence(int size) {
 }
 
 BitSequence::BitSequence(const char* rawData, int size) {
+    if (size < 0)
+        throw std::invalid_argument("Size cannot be negative");
+    if (rawData == nullptr && size > 0)
+        throw std::invalid_argument("rawData cannot be null");
     length_ = size;
     byteCount_ = (size + 7) / 8;
     data_ = new char[byteCount_];
@@ -34,12 +38,13 @@ BitSequence::BitSequence(const BitSequence& other) {
 
 BitSequence& BitSequence::operator=(const BitSequence& other) {
     if (this != &other) {
+        char* newData = other.byteCount_ > 0 ? new char[other.byteCount_] : nullptr;
+        for (int i = 0; i < other.byteCount_; ++i)
+            newData[i] = other.data_[i];
         delete[] data_;
+        data_ = newData;
         length_ = other.length_;
         byteCount_ = other.byteCount_;
-        data_ = new char[byteCount_];
-        for (int i = 0; i < byteCount_; ++i)
-            data_[i] = other.data_[i];
     }
     return *this;
 }

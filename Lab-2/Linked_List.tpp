@@ -20,6 +20,8 @@ LinkedList<T>::LinkedList(const T* items, int count)
     : head_(nullptr), tail_(nullptr), length_(0) {
     if (count < 0)
         throw std::invalid_argument("Count cannot be negative");
+    if (items == nullptr && count > 0)
+        throw std::invalid_argument("Items cannot be null");
     for (int i = 0; i < count; ++i)
         Append(items[i]);
 }
@@ -101,7 +103,8 @@ const T& LinkedList<T>::Get(int index) const {
 
 template <class T>
 LinkedList<T> LinkedList<T>::GetSubList(int startIndex, int endIndex) const {
-    if (startIndex < 0 || endIndex >= length_ || startIndex > endIndex)
+    if (startIndex < 0 || endIndex < 0 ||
+        endIndex >= length_ || startIndex > endIndex)
         throw std::out_of_range("Invalid range");
     LinkedList<T> result;
     Node* current = GetNode(startIndex);
