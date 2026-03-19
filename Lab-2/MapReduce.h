@@ -8,80 +8,82 @@
 #include <stdexcept>
 
 // MAP
-// Принимает последовательность T, функцию T->U
-// Возвращает новую последовательность U
 template <class T, class U>
 Sequence<U>* Map(const Sequence<T>* seq, U(*func)(const T&)) {
     MutableArraySequence<U>* result = new MutableArraySequence<U>();
-    for (int i = 0; i < seq->GetLength(); ++i)
-        result->Append(func(seq->Get(i)));
+    auto* en = seq->get_enumerator();
+    while (en->move_next())
+        result->Append(func(en->get_current()));
+    delete en;
     return result;
 }
 
 // WHERE
-// Принимает последовательность T, функцию T->bool
-// Возвращает новую последовательность T только с элементами где func вернул true
 template <class T>
 Sequence<T>* Where(const Sequence<T>* seq, bool(*func)(const T&)) {
     MutableArraySequence<T>* result = new MutableArraySequence<T>();
-    for (int i = 0; i < seq->GetLength(); ++i)
-        if (func(seq->Get(i)))
-            result->Append(seq->Get(i));
+    auto* en = seq->get_enumerator();
+    while (en->move_next()) {
+        if (func(en->get_current()))
+            result->Append(en->get_current());
+    }
+    delete en;
     return result;
 }
 
 // REDUCE
-// Принимает последовательность T, функцию (U,T)->U и начальное значение
-// Возвращает одно значение типа U
 template <class T, class U>
 U Reduce(const Sequence<T>* seq, U(*func)(const U&, const T&), const U& initial) {
     U result = initial;
-    for (int i = 0; i < seq->GetLength(); ++i)
-        result = func(result, seq->Get(i));
+    auto* en = seq->get_enumerator();
+    while (en->move_next())
+        result = func(result, en->get_current());
+    delete en;
     return result;
 }
 
 // ZIP
-// Берёт две последовательности T и U
-// Возвращает последовательность Pair<T,U>
-// Длина результата = минимум из длин двух последовательностей
 template <class T, class U>
 Sequence<Pair<T, U>>* Zip(const Sequence<T>* first, const Sequence<U>* second) {
     MutableArraySequence<Pair<T, U>>* result = new MutableArraySequence<Pair<T, U>>();
-    int length = first->GetLength() < second->GetLength()
-        ? first->GetLength()
-        : second->GetLength();
-    for (int i = 0; i < length; ++i)
-        result->Append(Pair<T, U>(first->Get(i), second->Get(i)));
+    auto* en1 = first->get_enumerator();
+    auto* en2 = second->get_enumerator();
+
+    while (en1->move_next() && en2->move_next())
+        result->Append(Pair<T, U>(en1->get_current(), en2->get_current()));
+
+    delete en1;
+    delete en2;
     return result;
 }
 
 // UNZIP
-// Берёт последовательность Pair<T,U>
-// Возвращает две отдельные последовательности через выходные параметры
 template <class T, class U>
 void Unzip(const Sequence<Pair<T, U>>* seq,
     Sequence<T>*& outFirst,
     Sequence<U>*& outSecond) {
+
     MutableArraySequence<T>* first = new MutableArraySequence<T>();
     MutableArraySequence<U>* second = new MutableArraySequence<U>();
-    for (int i = 0; i < seq->GetLength(); ++i) {
-        first->Append(seq->Get(i).first);
-        second->Append(seq->Get(i).second);
+
+    auto* en = seq->get_enumerator();
+    while (en->move_next()) {
+        first->Append(en->get_current().first);
+        second->Append(en->get_current().second);
     }
+    delete en;
+
     outFirst = first;
     outSecond = second;
 }
 
 // ZIPN
-// Принимает последовательность последовательностей одного типа T
-// Возвращает транспонированную последовательность последовательностей
 template <class T>
 Sequence<Sequence<T>*>* ZipN(const Sequence<Sequence<T>*>* seqs) {
     if (seqs->GetLength() == 0)
         return new MutableArraySequence<Sequence<T>*>();
 
-    // минимальная длина среди всех последовательностей
+    // Получаем минимальную длину
     int minLen = seqs->Get(0)->GetLength();
     for (int i = 1; i < seqs->GetLength(); ++i)
         if (seqs->Get(i)->GetLength() < minLen)
@@ -89,10 +91,23 @@ Sequence<Sequence<T>*>* ZipN(const Sequence<Sequence<T>*>* seqs) {
 
     MutableArraySequence<Sequence<T>*>* result = new MutableArraySequence<Sequence<T>*>();
 
+    // Для каждой колонки
     for (int col = 0; col < minLen; ++col) {
         MutableArraySequence<T>* row = new MutableArraySequence<T>();
-        for (int seqIdx = 0; seqIdx < seqs->GetLength(); ++seqIdx)
-            row->Append(seqs->Get(seqIdx)->Get(col));
+
+
+        auto* seqs_en = seqs->get_enumerator();
+        int seqIdx = 0;
+        while (seqs_en->move_next()) {
+            auto* current_seq = seqs_en->get_current();
+            auto* col_en = current_seq->get_enumerator();
+            for (int k = 0; k <= col && col_en->move_next(); ++k);
+            if (col_en->move_next())
+                row->Append(col_en->get_current());
+            delete col_en;
+            ++seqIdx;
+        }
+        delete seqs_en;
         result->Append(row);
     }
 
@@ -102,7 +117,7 @@ Sequence<Sequence<T>*>* ZipN(const Sequence<Sequence<T>*>* seqs) {
 // UNZIPN — обратная к ZipN
 template <class T>
 Sequence<Sequence<T>*>* UnZipN(const Sequence<Sequence<T>*>* seqs) {
-    return ZipN(seqs);  // транспонирование — обратная операция к себе самой
+    return ZipN(seqs);
 }
 
 
@@ -116,15 +131,19 @@ MinMaxAvg<T> GetMinMaxAvg(const Sequence<T>& seq) {
     if (seq.GetLength() == 0)
         throw std::out_of_range("Empty sequence");
 
-    T mn = seq.Get(0), mx = seq.Get(0);
-    double sum = 0;
-
-    for (int i = 0; i < seq.GetLength(); i++) {
-        const T& val = seq.Get(i);
+    auto* en = seq.get_enumerator();
+    en->move_next();
+    T mn = en->get_current();
+    T mx = mn;
+    double sum = (double)mn;
+    while (en->move_next()) {
+        const T& val = en->get_current();
         if (val < mn) mn = val;
         if (val > mx) mx = val;
         sum += val;
     }
+    delete en;
+
     return { mn, mx, sum / seq.GetLength() };
 }
 
@@ -147,9 +166,15 @@ void QuickSort(T* arr, int left, int right) {
 template <class T>
 double GetMedian(const Sequence<T>& seq) {
     int n = seq.GetLength();
+
     if (n == 0) throw std::out_of_range("Empty sequence");
+
     T* arr = new T[n];
-    for (int i = 0; i < n; i++) arr[i] = seq.Get(i);
+    auto* en = seq.get_enumerator();
+    for (int i = 0; i < n && en->move_next(); i++)
+        arr[i] = en->get_current();
+    delete en;
+
     QuickSort(arr, 0, n - 1);
     double result = (n % 2 == 0)
         ? (arr[n / 2 - 1] + arr[n / 2]) / 2.0
@@ -221,15 +246,23 @@ template <class T>
 MutableArraySequence<double>* GetSqrtVariance(const Sequence<T>& seq) {
     int n = seq.GetLength();
     double sum_sq = 0;
-    for (int i = 0; i < n; i++)
-        sum_sq += (double)seq.Get(i) * seq.Get(i);
+    auto* result = new MutableArraySequence<double>();
+
+    // Первый проход — считаем sum_sq
+    auto* en = seq.get_enumerator();
+    while (en->move_next())
+        sum_sq += (double)en->get_current() * en->get_current();
+    delete en;
+
     double sigma2 = sum_sq / n;
 
-    auto* result = new MutableArraySequence<double>();
-    for (int i = 0; i < n; i++) {
-        double val = sigma2 - (double)seq.Get(i) * seq.Get(i);
+    auto* en2 = seq.get_enumerator();
+    while (en2->move_next()) {
+        double val = sigma2 - (double)en2->get_current() * en2->get_current();
         result->Append(val >= 0 ? std::sqrt(val) : 0.0);
     }
+    delete en2;
+
     return result;
 }
 

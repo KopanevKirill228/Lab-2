@@ -128,8 +128,12 @@ Sequence<T>* ArraySequence<T>::Concat(const Sequence<T>& other) const {
     MutableArraySequence<T>* result = new MutableArraySequence<T>();
     for (int i = 0; i < size_; ++i)
         result->AppendInternal(items_.Get(i));
-    for (int i = 0; i < other.GetLength(); ++i)
-        result->AppendInternal(other.Get(i));
+
+    auto* en = other.get_enumerator();
+    while (en->move_next())
+        result->AppendInternal(en->get_current());
+    delete en;
+
     return result;
 }
 
@@ -208,8 +212,10 @@ typename MutableArraySequence<T>::Builder& MutableArraySequence<T>::Builder::App
 
 template <class T>
 typename MutableArraySequence<T>::Builder& MutableArraySequence<T>::Builder::AppendSequence(const Sequence<T>& other) {
-    for (int i = 0; i < other.GetLength(); ++i)
-        seq_->AppendInternal(other.Get(i));
+    auto* en = other.get_enumerator();
+    while (en->move_next())
+        seq_->AppendInternal(en->get_current());
+    delete en;
     return *this;
 }
 
