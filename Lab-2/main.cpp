@@ -227,7 +227,6 @@ void BitSequenceMenu() {
             else if (cmd == 2) {
                 int i = readInt("Index: ");
                 std::cout << "Bit[" << i << "] = " << bs.Get(i) << std::endl;
-
             }
             else if (cmd == 3) {
                 int i = readInt("Index: ");
