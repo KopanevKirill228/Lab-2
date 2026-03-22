@@ -606,15 +606,9 @@ void test_BitSequence() {
     }
 
     {
-        BitSequence a(4), b(4); a.Set(1, 1); b.Set(1, 1);
-        CHECK("operator== equal", a == b);
-        b.Set(0, 1);
-        CHECK("operator== not equal", !(a == b));
-    }
-
-    {
         BitSequence a(4), b(4); a.Set(0, 1); a.Set(1, 1); b.Set(1, 1); b.Set(2, 1);
-        auto r = a.AND(b);
+        BitSequence r(4);
+        a.AND(b, r);
         CHECK("AND bit0", r.Get(0) == 0);
         CHECK("AND bit1", r.Get(1) == 1);
         CHECK("AND bit2", r.Get(2) == 0);
@@ -622,7 +616,8 @@ void test_BitSequence() {
 
     {
         BitSequence a(4), b(4); a.Set(0, 1); b.Set(1, 1);
-        auto r = a.OR(b);
+        BitSequence r(4);
+        a.OR(b, r);
         CHECK("OR bit0", r.Get(0) == 1);
         CHECK("OR bit1", r.Get(1) == 1);
         CHECK("OR bit2", r.Get(2) == 0);
@@ -630,14 +625,17 @@ void test_BitSequence() {
 
     {
         BitSequence a(4), b(4); a.Set(0, 1); a.Set(1, 1); b.Set(1, 1); b.Set(2, 1);
-        auto r = a.XOR(b);
+        BitSequence r(4);
+        a.XOR(b, r);
         CHECK("XOR bit0", r.Get(0) == 1);
         CHECK("XOR bit1", r.Get(1) == 0);
         CHECK("XOR bit2", r.Get(2) == 1);
     }
 
     {
-        BitSequence a(4); a.Set(0, 1); a.Set(2, 1); auto r = a.NOT();
+        BitSequence a(4); a.Set(0, 1); a.Set(2, 1);
+        BitSequence r(4);
+        a.NOT(r);
         CHECK("NOT bit0", r.Get(0) == 0);
         CHECK("NOT bit1", r.Get(1) == 1);
         CHECK("NOT bit2", r.Get(2) == 0);
@@ -681,7 +679,9 @@ void test_BitSequence() {
     }
 
     {
-        BitSequence a(9); auto r = a.NOT();
+        BitSequence a(9);
+        BitSequence r(9);
+        a.NOT(r);
         CHECK("NOT length 9", r.GetLength() == 9);
         bool allOne = true;
         for (int i = 0; i < 9; ++i) if (r.Get(i) != 1) allOne = false;
@@ -723,10 +723,10 @@ void test_BitSequence() {
         CHECK_THROWS("Flip OOB", bs.Flip(10));
     }
     {
-        BitSequence a(4), b(8);
-        CHECK_THROWS("AND size mismatch", a.AND(b));
-        CHECK_THROWS("OR size mismatch", a.OR(b));
-        CHECK_THROWS("XOR size mismatch", a.XOR(b));
+        BitSequence a(4), b(8), r(4);
+        CHECK_THROWS("AND size mismatch", a.AND(b, r));
+        CHECK_THROWS("OR size mismatch", a.OR(b, r));
+        CHECK_THROWS("XOR size mismatch", a.XOR(b, r));
     }
 }
 

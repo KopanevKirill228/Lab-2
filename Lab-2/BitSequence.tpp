@@ -58,6 +58,11 @@ void BitSequence::CheckIndex(int index) const {
         throw std::out_of_range("Index is out of range");
 }
 
+void BitSequence::CheckSameLength(const BitSequence& other) const {
+    if (length_ != other.length_)
+        throw std::invalid_argument("Sequences must have equal length");
+}
+
 int BitSequence::GetLength() const {
     return length_;
 }
@@ -88,42 +93,35 @@ void BitSequence::Flip(int index) {
     data_[byte] ^= (1 << pos);  // XOR с 1 инвертирует бит
 }
 
-BitSequence BitSequence::AND(const BitSequence& other) const {
-    if (length_ != other.length_)
-        throw std::invalid_argument("Sequences must have equal length");
-    BitSequence result(length_);
+void BitSequence::AND(const BitSequence& other, BitSequence& result) const {
+    CheckSameLength(other);
+    CheckSameLength(result);
     for (int i = 0; i < byteCount_; ++i)
         result.data_[i] = data_[i] & other.data_[i];
-    return result;
 }
 
-BitSequence BitSequence::OR(const BitSequence& other) const {
-    if (length_ != other.length_)
-        throw std::invalid_argument("Sequences must have equal length");
-    BitSequence result(length_);
+void BitSequence::OR(const BitSequence& other, BitSequence& result) const {
+    CheckSameLength(other);
+    CheckSameLength(result);
     for (int i = 0; i < byteCount_; ++i)
         result.data_[i] = data_[i] | other.data_[i];
-    return result;
 }
 
-BitSequence BitSequence::XOR(const BitSequence& other) const {
-    if (length_ != other.length_)
-        throw std::invalid_argument("Sequences must have equal length");
-    BitSequence result(length_);
+void BitSequence::XOR(const BitSequence& other, BitSequence& result) const {
+    CheckSameLength(other);
+    CheckSameLength(result);
     for (int i = 0; i < byteCount_; ++i)
         result.data_[i] = data_[i] ^ other.data_[i];
-    return result;
 }
 
-BitSequence BitSequence::NOT() const {
-    BitSequence result(length_);
+void BitSequence::NOT(BitSequence& result) const {
+    CheckSameLength(result);
     for (int i = 0; i < byteCount_; ++i)
         result.data_[i] = ~data_[i];
     // обнуляем лишние биты в последнем байте
     int extraBits = byteCount_ * 8 - length_;
     if (extraBits > 0)
         result.data_[byteCount_ - 1] &= (1 << (8 - extraBits)) - 1;
-    return result;
 }
 
 void BitSequence::Print() const {
@@ -150,17 +148,28 @@ bool BitSequence::operator==(const BitSequence& other) const {
 }
 
 BitSequence BitSequence::operator&(const BitSequence& other) const {
-    return AND(other);
+    CheckSameLength(other);
+    BitSequence result(length_);
+    AND(other, result);
+    return result;
 }
 
 BitSequence BitSequence::operator|(const BitSequence& other) const {
-    return OR(other);
+    CheckSameLength(other);
+    BitSequence result(length_);
+    OR(other, result);
+    return result;
 }
 
 BitSequence BitSequence::operator^(const BitSequence& other) const {
-    return XOR(other);
+    CheckSameLength(other);
+    BitSequence result(length_);
+    XOR(other, result);
+    return result;
 }
 
 BitSequence BitSequence::operator~() const {
-    return NOT();
+    BitSequence result(length_);
+    NOT(result);
+    return result;
 }

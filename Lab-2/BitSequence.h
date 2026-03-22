@@ -15,15 +15,19 @@ public:
     void Set(int index, int bit);     // устанавливает 0 или 1
     void Flip(int index);             // инвертирует бит
 
-    BitSequence AND(const BitSequence& other) const;
-    BitSequence OR(const BitSequence& other)  const;
-    BitSequence XOR(const BitSequence& other) const;
-    BitSequence NOT() const;
+    //без создания нового элементы внутри
+    void AND(const BitSequence& other, BitSequence& result) const;
+    void OR(const BitSequence& other, BitSequence& result) const;
+    void XOR(const BitSequence& other, BitSequence& result) const;
+    void NOT(BitSequence& result) const;
 
     void Print() const;
 
     int operator[](int index) const;
     bool operator==(const BitSequence& other) const;
+
+    // перегрузка должна возвращать новый результат, поэтому нельзя
+    // добавить указатель на результат
     BitSequence operator&(const BitSequence& other) const;
     BitSequence operator|(const BitSequence& other) const;
     BitSequence operator^(const BitSequence& other) const;
@@ -35,6 +39,7 @@ private:
     int byteCount_; // количество байт = (length + 7) / 8
 
     void CheckIndex(int index) const;
+    void CheckSameLength(const BitSequence& other) const;
 };
 
 #include "BitSequence.tpp"

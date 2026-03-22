@@ -241,7 +241,8 @@ void BitSequenceMenu() {
                     int b = readIntRange("  [" + std::to_string(i) + "] (0/1): ", 0, 1);
                     other.Set(i, b);
                 }
-                BitSequence result = bs.AND(other);
+                BitSequence result(n);
+                bs.AND(other, result);
                 std::cout << "AND: "; result.Print();
 
             }
@@ -252,7 +253,8 @@ void BitSequenceMenu() {
                     int b = readIntRange("  [" + std::to_string(i) + "] (0/1): ", 0, 1);
                     other.Set(i, b);
                 }
-                BitSequence result = bs.OR(other);
+                BitSequence result(n);
+                bs.OR(other, result);
                 std::cout << "OR: "; result.Print();
 
             }
@@ -263,12 +265,14 @@ void BitSequenceMenu() {
                     int b = readIntRange("  [" + std::to_string(i) + "] (0/1): ", 0, 1);
                     other.Set(i, b);
                 }
-                BitSequence result = bs.XOR(other);
+                BitSequence result(n);
+                bs.XOR(other, result);
                 std::cout << "XOR: "; result.Print();
 
             }
             else if (cmd == 7) {
-                BitSequence result = bs.NOT();
+                BitSequence result(n);
+                bs.NOT(result);
                 std::cout << "NOT: "; result.Print();
             }
 
