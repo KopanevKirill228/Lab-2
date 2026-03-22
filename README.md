@@ -69,7 +69,7 @@
 
 ```cmd
 mingw32-make
-.\program.exe
+.\program.exe 
 ```
 
 ### Запуск тестов

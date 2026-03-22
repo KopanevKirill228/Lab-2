@@ -4,7 +4,6 @@
 #include "ArraySequence.h"
 #include "Pair.h"
 #include <cmath>
-#include <stack>
 #include <stdexcept>
 
 // MAP
