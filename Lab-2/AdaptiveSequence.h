@@ -6,16 +6,6 @@
 
 template <class T>
 class AdaptiveSequence : public Sequence<T> {
-private:
-    mutable int index_ops_;
-    mutable int insert_ops_;
-    mutable bool is_array_;
-    mutable Sequence<T>* inner_;
-
-    static const int THRESHOLD = 10;
-
-    void maybe_switch();
-
 public:
     AdaptiveSequence();
     ~AdaptiveSequence();
@@ -37,6 +27,16 @@ public:
     IEnumerator<T>* get_enumerator() const override;
 
     bool IsArray() const;
+
+private:
+    mutable int index_ops_;
+    mutable int insert_ops_;
+    mutable bool is_array_;
+    mutable Sequence<T>* inner_;
+
+    static const int THRESHOLD = 10;
+
+    void maybe_switch();
 };
 
 #include "AdaptiveSequence.tpp"
