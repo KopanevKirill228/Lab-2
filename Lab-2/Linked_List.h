@@ -4,7 +4,6 @@
 template <class T>
 class LinkedList {
 public:
-
     LinkedList();
     LinkedList(const T* items, int count);
     LinkedList(const LinkedList<T>& other);
