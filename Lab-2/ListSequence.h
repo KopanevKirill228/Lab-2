@@ -25,7 +25,7 @@ public:
     Sequence<T>* InsertAt(const T& item, int index) override;
     Sequence<T>* Concat(const Sequence<T>& other) const override;
 
-    T operator[](int index) const override;
+    T operator[](int index) const override; // это можно бы и убрать. O(n) операция. но оно особо не мешает поэтому оставлю
     Sequence<T>* operator+(const Sequence<T>& other) const override;
 
 

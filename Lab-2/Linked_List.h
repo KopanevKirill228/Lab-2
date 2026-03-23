@@ -11,9 +11,9 @@ public:
     LinkedList<T>& operator=(const LinkedList<T>& other);
     ~LinkedList();
 
-    const T& GetFirst() const; // было T GetFirst() const
+    const T& GetFirst() const;
     const T& GetLast() const;
-    const T& Get(int index) const;
+    const T& Get(int index) const; // операция долгая (O(n))
 
     int GetLength() const;
     void Append(const T& item);
