@@ -260,7 +260,7 @@ MutableArraySequence<double>* GetSqrtVariance(const Sequence<T>& seq) {
     return result;
 }
 
-// П-8: a_i + a_{n-1-i} (сумма с зеркальным элементом)
+// П-8: a_i + a_{n-1-i} (сумма с зеркальным элементом) через zip + map
 template <class T>
 MutableArraySequence<T>* GetMirrorSum(const Sequence<T>& seq) {
     int n = seq.GetLength();
