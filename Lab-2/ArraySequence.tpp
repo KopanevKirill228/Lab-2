@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 
-template <class T>  
+template <class T>
 void ArraySequence<T>::EnsureCapacity(int required) {
     if (required <= capacity_) return;
     int newCapacity = (capacity_ == 0) ? 1 : capacity_;

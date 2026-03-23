@@ -14,7 +14,7 @@ public:
     virtual ~ArraySequence() = default;
 
     const T& GetFirst() const override;
-    const T& GetLast()  const override;
+    const T& GetLast() const override;
     const T& Get(int index) const override;
     int GetLength() const override;
 

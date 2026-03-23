@@ -11,9 +11,9 @@ public:
 
     int GetLength() const;
 
-    int Get(int index) const;        // возвращает 0 или 1
-    void Set(int index, int bit);     // устанавливает 0 или 1
-    void Flip(int index);             // инвертирует бит
+    int Get(int index) const; // возвращает 0 или 1
+    void Set(int index, int bit); // устанавливает 0 или 1
+    void Flip(int index); // инвертирует бит
 
     //без создания нового элементы внутри
     void AND(const BitSequence& other, BitSequence& result) const;
@@ -35,7 +35,7 @@ public:
 
 private:
     char* data_;
-    int length_;    // количество бит
+    int length_; // количество бит
     int byteCount_; // количество байт = (length + 7) / 8
 
     void CheckIndex(int index) const;

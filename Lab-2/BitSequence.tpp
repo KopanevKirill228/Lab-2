@@ -10,7 +10,7 @@ BitSequence::BitSequence(int size) {
     if (size < 0)
         throw std::invalid_argument("Size cannot be negative");
     length_ = size;
-    byteCount_ = (size + 7) / 8;  // округление вверх
+    byteCount_ = (size + 7) / 8; // округление вверх
     data_ = new char[byteCount_];
     for (int i = 0; i < byteCount_; ++i)
         data_[i] = 0;
@@ -81,16 +81,16 @@ void BitSequence::Set(int index, int bit) {
     int byte = index / 8;
     int pos = index % 8;
     if (bit == 1)
-        data_[byte] |= (1 << pos);  // установить в 1
+        data_[byte] |= (1 << pos); // установить в 1
     else
-        data_[byte] &= ~(1 << pos);  // установить в 0
+        data_[byte] &= ~(1 << pos); // установить в 0
 }
 
 void BitSequence::Flip(int index) {
     CheckIndex(index);
     int byte = index / 8;
     int pos = index % 8;
-    data_[byte] ^= (1 << pos);  // XOR с 1 инвертирует бит
+    data_[byte] ^= (1 << pos); // XOR с 1 инвертирует бит
 }
 
 void BitSequence::AND(const BitSequence& other, BitSequence& result) const {

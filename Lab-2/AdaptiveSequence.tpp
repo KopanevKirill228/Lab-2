@@ -11,8 +11,8 @@ void AdaptiveSequence<T>::maybe_switch() {
                 new_inner->Append(inner_->Get(i));
         }
         catch (...) {
-            delete new_inner;  // чистим если что-то пошло не так
-            throw;             // пробрасываем исключение дальше
+            delete new_inner; // чистим если что-то пошло не так
+            throw; // пробрасываем исключение дальше
         }
         delete inner_;
         inner_ = new_inner;
