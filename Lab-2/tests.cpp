@@ -480,86 +480,7 @@ void test_Zip() {
     }
 }
 
-// 9. Algorithms
-void test_Algorithms() {
-    SUITE("Algorithms (П1-П8)");
-
-    {
-        int d[] = { 3,1,4,1,5 }; MutableArraySequence<int> s(d, 5);
-        auto r = GetMinMaxAvg(s);
-        CHECK("П1: min", r.min == 1);
-        CHECK("П1: max", r.max == 5);
-        CHECK("П1: avg", r.avg == 2.8);
-    }
-
-    {
-        MutableArraySequence<int> s;
-        CHECK_THROWS("П1: empty throws", GetMinMaxAvg(s));
-    }
-
-    {
-        int d[] = { 3,1,2 }; MutableArraySequence<int> s(d, 3);
-        CHECK("П2: median odd", GetMedian(s) == 2.0);
-    }
-
-    {
-        int d[] = { 1,2,3,4 }; MutableArraySequence<int> s(d, 4);
-        CHECK("П2: median even", GetMedian(s) == 2.5);
-    }
-
-    {
-        MutableArraySequence<int> s;
-        CHECK_THROWS("П2: empty throws", GetMedian(s));
-    }
-
-    {
-        int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        CHECK("П3: sorted = 0 inversions", CountInversions(s) == 0);
-    }
-
-    {
-        int d[] = { 3,2,1 }; MutableArraySequence<int> s(d, 3);
-        CHECK("П3: reversed = 3 inversions", CountInversions(s) == 3);
-    }
-
-    {
-        int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        auto* p = GetPrefixes(s);
-        CHECK("П5: prefixes count", p->GetLength() == 3);
-        CHECK("П5: first prefix length", p->Get(0)->GetLength() == 1);
-        CHECK("П5: last prefix length", p->Get(2)->GetLength() == 3);
-        for (int i = 0; i < p->GetLength(); ++i) delete p->Get(i);
-        delete p;
-    }
-
-    {
-        int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        auto* sf = GetSuffixes(s);
-        CHECK("П5: suffixes count", sf->GetLength() == 3);
-        CHECK("П5: first suffix length", sf->Get(0)->GetLength() == 3);
-        CHECK("П5: last suffix length", sf->Get(2)->GetLength() == 1);
-        for (int i = 0; i < sf->GetLength(); ++i) delete sf->Get(i);
-        delete sf;
-    }
-
-    {
-        int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        auto* avg = GetMovingAverage(s);
-        CHECK("П6: moving avg edge", avg->Get(0) == 1.5);
-        CHECK("П6: moving avg center", avg->Get(1) == 2.0);
-        delete avg;
-    }
-
-    {
-        int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        auto* m = GetMirrorSum(s);
-        CHECK("П8: mirror sum first", m->Get(0) == 1 + 3);
-        CHECK("П8: mirror sum middle", m->Get(1) == 2 + 2);
-        delete m;
-    }
-}
-
-// 10. BitSequence
+// 9. BitSequence
 void test_BitSequence() {
     SUITE("BitSequence");
 
@@ -730,7 +651,7 @@ void test_BitSequence() {
     }
 }
 
-// 11. AdaptiveSequence
+// 10. AdaptiveSequence
 void test_AdaptiveSequence() {
     SUITE("AdaptiveSequence");
 
@@ -825,7 +746,7 @@ void test_AdaptiveSequence() {
     }
 }
 
-// 12. MutableListSequence
+// 11. MutableListSequence
 void test_MutableListSequence() {
     SUITE("MutableListSequence");
 
@@ -961,7 +882,7 @@ void test_MutableListSequence() {
     CHECK_THROWS("null neg throws", MutableListSequence<int>(nullptr, -1));
 }
 
-// 13. ImmutableListSequence
+// 12. ImmutableListSequence
 void test_ImmutableListSequence() {
     SUITE("ImmutableListSequence");
 
@@ -1002,7 +923,7 @@ void test_ImmutableListSequence() {
     }
 }
 
-// 14. ListSequence Builder
+// 13. ListSequence Builder
 void test_ListBuilder() {
     SUITE("Builder (ListSequence)");
 
@@ -1048,7 +969,7 @@ void test_ListBuilder() {
     }
 }
 
-// 15. ListSequence Enumerator
+// 14. ListSequence Enumerator
 void test_ListEnumerator() {
     SUITE("Enumerator (ListSequence)");
 
@@ -1094,7 +1015,6 @@ int main() {
     test_Enumerator();
     test_MapReduce();
     test_Zip();
-    test_Algorithms();
     test_BitSequence();
     test_AdaptiveSequence();
     test_MutableListSequence();

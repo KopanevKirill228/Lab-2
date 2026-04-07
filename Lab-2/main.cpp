@@ -283,97 +283,6 @@ void BitSequenceMenu() {
 }
 
 
-void AlgorithmsMenu() {
-    Sequence<int>* seq = CreateSequence();
-
-    int cmd = -1;
-    while (cmd != 0) {
-        std::cout << "\n=== Algorithms ===" << std::endl;
-        std::cout << "Current: "; PrintSequence(seq);
-        std::cout << "1. Min / Max / Avg\n";
-        std::cout << "2. Median\n";
-        std::cout << "3. Count inversions\n";
-        std::cout << "4. All prefixes\n";
-        std::cout << "5. All suffixes\n";
-        std::cout << "6. Moving average\n";
-        std::cout << "7. Sqrt variance per element\n";
-        std::cout << "8. Mirror sum\n";
-        std::cout << "0. Back\n";
-
-        cmd = readIntRange("Choice (0-8): ", 0, 8);
-
-        try {
-            if (cmd == 1) {
-                auto res = GetMinMaxAvg(*seq);
-                std::cout << "Min: " << res.min
-                    << "  Max: " << res.max
-                    << "  Avg: " << res.avg << std::endl;
-
-            }
-            else if (cmd == 2) {
-                std::cout << "Median: " << GetMedian(*seq) << std::endl;
-
-            }
-            else if (cmd == 3) {
-                std::cout << "Inversions: " << CountInversions(*seq) << std::endl;
-
-            }
-            else if (cmd == 4) {
-                auto* prefixes = GetPrefixes(*seq);
-                std::cout << "Prefixes:" << std::endl;
-                for (int i = 0; i < prefixes->GetLength(); ++i) {
-                    std::cout << "  "; PrintSequence(prefixes->Get(i));
-                }
-                for (int i = 0; i < prefixes->GetLength(); ++i) delete prefixes->Get(i);
-                delete prefixes;
-
-            }
-            else if (cmd == 5) {
-                auto* suffixes = GetSuffixes(*seq);
-                std::cout << "Suffixes:" << std::endl;
-                for (int i = 0; i < suffixes->GetLength(); ++i) {
-                    std::cout << "  "; PrintSequence(suffixes->Get(i));
-                }
-                for (int i = 0; i < suffixes->GetLength(); ++i) delete suffixes->Get(i);
-                delete suffixes;
-
-            }
-            else if (cmd == 6) {
-                auto* avg = GetMovingAverage(*seq);
-                std::cout << "Moving average: [";
-                for (int i = 0; i < avg->GetLength(); ++i) {
-                    std::cout << avg->Get(i);
-                    if (i < avg->GetLength() - 1) std::cout << ", ";
-                }
-                std::cout << "]" << std::endl;
-                delete avg;
-
-            }
-            else if (cmd == 7) {
-                auto* sv = GetSqrtVariance(*seq);
-                std::cout << "Sqrt variance: [";
-                for (int i = 0; i < sv->GetLength(); ++i) {
-                    std::cout << sv->Get(i);
-                    if (i < sv->GetLength() - 1) std::cout << ", ";
-                }
-                std::cout << "]" << std::endl;
-                delete sv;
-
-            }
-            else if (cmd == 8) {
-                auto* ms = GetMirrorSum(*seq);
-                std::cout << "Mirror sum: "; PrintSequence(ms);
-                delete ms;
-            }
-
-        }
-        catch (const std::exception& e) {
-            std::cout << "Error: " << e.what() << std::endl;
-        }
-    }
-    delete seq;
-}
-
 int main() {
     SetConsoleOutputCP(65001);
     std::cout << "Hello, it's Lab 2 - Sequences" << std::endl;
@@ -383,10 +292,9 @@ int main() {
         std::cout << "\n=== Main Menu ===" << std::endl;
         std::cout << "1. Work with Sequence<int>\n";
         std::cout << "2. Work with BitSequence\n";
-        std::cout << "3. Algorithms (P1-P8)\n";
         std::cout << "0. Exit\n";
 
-        cmd = readIntRange("Choice (0-3): ", 0, 3);
+        cmd = readIntRange("Choice (0-2): ", 0, 2);
 
         if (cmd == 1) {
             Sequence<int>* seq = CreateSequence();
@@ -395,9 +303,6 @@ int main() {
         }
         else if (cmd == 2) {
             BitSequenceMenu();
-        }
-        else if (cmd == 3) {
-            AlgorithmsMenu();
         }
     }
 
