@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "ienumerator.h"
+#include "IEnumerator.h"
 
 template <class T>
 class Sequence {
@@ -21,6 +21,6 @@ public:
     virtual T operator[](int index) const = 0;
     virtual Sequence<T>* operator+(const Sequence<T>& other) const = 0;
 
-    virtual IEnumerator<T>* get_enumerator() const = 0;
+    virtual IEnumerator<T>* GetEnumerator() const = 0;
 
 };

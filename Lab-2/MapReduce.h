@@ -1,75 +1,204 @@
 ﻿#pragma once
 
 #include "Sequence.h"
-#include "ArraySequence.h"
 #include "Pair.h"
 #include <stdexcept>
 #include <functional>
 
+// Добавляет элемент с учетом mutable / immutable семантики
+template <class T>
+void AppendToResult(Sequence<T>*& seq, const T& item) {
+    Sequence<T>* next = seq->Append(item);
+
+    if (next == nullptr) {
+        throw std::runtime_error("Append returned nullptr");
+    }
+
+    if (next != seq) {
+        delete seq;
+        seq = next;
+    }
+}
+
 // MAP — применяет func к каждому элементу
 template <class T, class U>
-Sequence<U>* Map(const Sequence<T>* seq, std::function<U(const T&)> func) {
-    auto* result = new MutableArraySequence<U>();
-    auto* en = seq->get_enumerator();
-    while (en->move_next())
-        result->Append(func(en->get_current()));
+Sequence<U>* Map(
+    const Sequence<T>* seq,
+    std::function<U(const T&)> func,
+    std::function<Sequence<U>* ()> createResult)
+{
+    if (seq == nullptr) {
+        throw std::invalid_argument("Map: sequence is nullptr");
+    }
+
+    if (!func) {
+        throw std::invalid_argument("Map: function is empty");
+    }
+
+    if (!createResult) {
+        throw std::invalid_argument("Map: result factory is empty");
+    }
+
+    Sequence<U>* result = createResult();
+
+    if (result == nullptr) {
+        throw std::runtime_error("Map: result factory returned nullptr");
+    }
+
+    auto* en = seq->GetEnumerator();
+
+    while (en->MoveNext()) {
+        AppendToResult(result, func(en->GetCurrent()));
+    }
+
     delete en;
     return result;
 }
 
 // WHERE — оставляет только элементы где func = true
 template <class T>
-Sequence<T>* Where(const Sequence<T>* seq, std::function<bool(const T&)> func) {
-    auto* result = new MutableArraySequence<T>();
-    auto* en = seq->get_enumerator();
-    while (en->move_next()) {
-        const T& val = en->get_current();
-        if (func(val))
-            result->Append(val);
+Sequence<T>* Where(
+    const Sequence<T>* seq,
+    std::function<bool(const T&)> func,
+    std::function<Sequence<T>* ()> createResult)
+{
+    if (seq == nullptr) {
+        throw std::invalid_argument("Where: sequence is nullptr");
     }
+
+    if (!func) {
+        throw std::invalid_argument("Where: function is empty");
+    }
+
+    if (!createResult) {
+        throw std::invalid_argument("Where: result factory is empty");
+    }
+
+    Sequence<T>* result = createResult();
+
+    if (result == nullptr) {
+        throw std::runtime_error("Where: result factory returned nullptr");
+    }
+
+    auto* en = seq->GetEnumerator();
+
+    while (en->MoveNext()) {
+        const T& val = en->GetCurrent();
+
+        if (func(val)) {
+            AppendToResult(result, val);
+        }
+    }
+
     delete en;
     return result;
 }
 
 // REDUCE — сворачивает последовательность в одно значение
 template <class T, class U>
-U Reduce(const Sequence<T>* seq, std::function<U(const U&, const T&)> func, const U& initial) {
+U Reduce(
+    const Sequence<T>* seq,
+    std::function<U(const U&, const T&)> func,
+    const U& initial)
+{
+    if (seq == nullptr) {
+        throw std::invalid_argument("Reduce: sequence is nullptr");
+    }
+
+    if (!func) {
+        throw std::invalid_argument("Reduce: function is empty");
+    }
+
     U accum = initial;
-    auto* en = seq->get_enumerator();
-    while (en->move_next())
-        accum = func(accum, en->get_current());
+    auto* en = seq->GetEnumerator();
+
+    while (en->MoveNext()) {
+        accum = func(accum, en->GetCurrent());
+    }
+
     delete en;
     return accum;
 }
 
 // ZIP — объединяет две последовательности в одну попарно
 template <class T, class U>
-Sequence<Pair<T, U>>* Zip(const Sequence<T>* first, const Sequence<U>* second) {
-    auto* result = new MutableArraySequence<Pair<T, U>>();
-    auto* en1 = first->get_enumerator();
-    auto* en2 = second->get_enumerator();
-    while (en1->move_next() && en2->move_next())
-        result->Append(Pair<T, U>(en1->get_current(), en2->get_current()));
+Sequence<Pair<T, U>>* Zip(
+    const Sequence<T>* first,
+    const Sequence<U>* second,
+    std::function<Sequence<Pair<T, U>>* ()> createResult)
+{
+    if (first == nullptr) {
+        throw std::invalid_argument("Zip: first sequence is nullptr");
+    }
+
+    if (second == nullptr) {
+        throw std::invalid_argument("Zip: second sequence is nullptr");
+    }
+
+    if (!createResult) {
+        throw std::invalid_argument("Zip: result factory is empty");
+    }
+
+    Sequence<Pair<T, U>>* result = createResult();
+
+    if (result == nullptr) {
+        throw std::runtime_error("Zip: result factory returned nullptr");
+    }
+
+    auto* en1 = first->GetEnumerator();
+    auto* en2 = second->GetEnumerator();
+
+    while (en1->MoveNext() && en2->MoveNext()) {
+        AppendToResult(result, Pair<T, U>(en1->GetCurrent(), en2->GetCurrent()));
+    }
+
     delete en1;
     delete en2;
+
     return result;
 }
 
 // UNZIP — разбивает последовательность пар на две
 template <class T, class U>
-void Unzip(const Sequence<Pair<T, U>>* seq,
+void Unzip(
+    const Sequence<Pair<T, U>>* seq,
     Sequence<T>*& outFirst,
-    Sequence<U>*& outSecond)
+    Sequence<U>*& outSecond,
+    std::function<Sequence<T>* ()> createFirst,
+    std::function<Sequence<U>* ()> createSecond)
 {
-    auto* first = new MutableArraySequence<T>();
-    auto* second = new MutableArraySequence<U>();
-    auto* en = seq->get_enumerator();
-    while (en->move_next()) {
-        const Pair<T, U>& p = en->get_current();
-        first->Append(p.first);
-        second->Append(p.second);
+    if (seq == nullptr) {
+        throw std::invalid_argument("Unzip: sequence is nullptr");
     }
+
+    if (!createFirst) {
+        throw std::invalid_argument("Unzip: first result factory is empty");
+    }
+
+    if (!createSecond) {
+        throw std::invalid_argument("Unzip: second result factory is empty");
+    }
+
+    Sequence<T>* first = createFirst();
+    Sequence<U>* second = createSecond();
+
+    if (first == nullptr || second == nullptr) {
+        delete first;
+        delete second;
+        throw std::runtime_error("Unzip: result factory returned nullptr");
+    }
+
+    auto* en = seq->GetEnumerator();
+
+    while (en->MoveNext()) {
+        const Pair<T, U>& p = en->GetCurrent();
+
+        AppendToResult(first, p.first);
+        AppendToResult(second, p.second);
+    }
+
     delete en;
+
     outFirst = first;
     outSecond = second;
 }

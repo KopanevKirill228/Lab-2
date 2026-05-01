@@ -1,5 +1,5 @@
 ﻿#include <stdexcept>
-#include "Dynamic_array.h"
+#include "DynamicArray.h"
 
 
 template <class T>

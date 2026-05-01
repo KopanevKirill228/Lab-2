@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "Sequence.h"
-#include "Dynamic_Array.h"
-#include "ienumerator.h"
+#include "DynamicArray.h"
+#include "IEnumerator.h"
 #include <stdexcept>
 
 template <class T>
@@ -35,22 +35,22 @@ private:
     public:
         Enumerator(const ArraySequence<T>* seq) : seq_(seq), index_(-1) {}
 
-        bool move_next() override {
+        bool MoveNext() override {
             ++index_;
             return index_ < seq_->GetLength();
         }
 
-        const T& get_current() const override {
+        const T& GetCurrent() const override {
             if (index_ < 0 || index_ >= seq_->GetLength())
                 throw std::out_of_range("Enumerator is out of range");
             return seq_->Get(index_);
         }
 
-        void reset() override { index_ = -1; }
+        void Reset() override { index_ = -1; }
     };
 
 public:
-    IEnumerator<T>* get_enumerator() const override {
+    IEnumerator<T>* GetEnumerator() const override {
         return new Enumerator(this);
     }
 

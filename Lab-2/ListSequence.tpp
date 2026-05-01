@@ -96,14 +96,14 @@ template <class T>
 Sequence<T>* ListSequence<T>::Concat(const Sequence<T>& other) const {
     MutableListSequence<T>* result = new MutableListSequence<T>();
 
-    auto* en1 = this->get_enumerator();
-    while (en1->move_next())
-        result->AppendInternal(en1->get_current());
+    auto* en1 = this->GetEnumerator();
+    while (en1->MoveNext())
+        result->AppendInternal(en1->GetCurrent());
     delete en1;
 
-    auto* en2 = other.get_enumerator();
-    while (en2->move_next())
-        result->AppendInternal(en2->get_current());
+    auto* en2 = other.GetEnumerator();
+    while (en2->MoveNext())
+        result->AppendInternal(en2->GetCurrent());
     delete en2;
 
     return result;
@@ -208,9 +208,9 @@ MutableListSequence<T>::Builder::AppendAll(const T* items, int count) {
 template <class T>
 typename MutableListSequence<T>::Builder&
 MutableListSequence<T>::Builder::AppendSequence(const Sequence<T>& other) {
-    auto* en = other.get_enumerator();
-    while (en->move_next())
-        seq_->Append(en->get_current());
+    auto* en = other.GetEnumerator();
+    while (en->MoveNext())
+        seq_->Append(en->GetCurrent());
     delete en;
     return *this;
 }

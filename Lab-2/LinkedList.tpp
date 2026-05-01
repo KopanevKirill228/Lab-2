@@ -1,5 +1,5 @@
 ﻿#include <stdexcept>
-#include "Linked_List.h"
+#include "LinkedList.h"
 
 template <class T>
 struct LinkedList<T>::Node {

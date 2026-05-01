@@ -3,7 +3,7 @@
 #include "AdaptiveSequence.h"
 
 template <class T>
-void AdaptiveSequence<T>::maybe_switch() {
+void AdaptiveSequence<T>::MaybeSwitch() {
     if (is_array_ && insert_ops_ > index_ops_ + THRESHOLD) {
         Sequence<T>* new_inner = new MutableListSequence<T>();
         try {
@@ -60,7 +60,7 @@ const T& AdaptiveSequence<T>::GetLast() const {
 template <class T>
 const T& AdaptiveSequence<T>::Get(int index) const {
     index_ops_++;
-    const_cast<AdaptiveSequence*>(this)->maybe_switch();
+    const_cast<AdaptiveSequence*>(this)->MaybeSwitch();
     return inner_->Get(index);
 }
 
@@ -84,7 +84,7 @@ template <class T>
 Sequence<T>* AdaptiveSequence<T>::Prepend(const T& item) {
     insert_ops_++;
     inner_->Prepend(item);
-    maybe_switch();
+    MaybeSwitch();
     return this;
 }
 
@@ -92,7 +92,7 @@ template <class T>
 Sequence<T>* AdaptiveSequence<T>::InsertAt(const T& item, int index) {
     insert_ops_++;
     inner_->InsertAt(item, index);
-    maybe_switch();
+    MaybeSwitch();
     return this;
 }
 
@@ -112,8 +112,8 @@ Sequence<T>* AdaptiveSequence<T>::operator+(const Sequence<T>& other) const {
 }
 
 template <class T>
-IEnumerator<T>* AdaptiveSequence<T>::get_enumerator() const {
-    return inner_->get_enumerator();
+IEnumerator<T>* AdaptiveSequence<T>::GetEnumerator() const {
+    return inner_->GetEnumerator();
 }
 
 template <class T>

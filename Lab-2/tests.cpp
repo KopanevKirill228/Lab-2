@@ -2,10 +2,13 @@
 #include <cassert>
 #include <stdexcept>
 #include <sstream>
-#include <windows.h>
 
-#include "Dynamic_Array.h"
-#include "Linked_List.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+#include "DynamicArray.h"
+#include "LinkedList.h"
 #include "ArraySequence.h"
 #include "ListSequence.h"
 #include "BitSequence.h"
@@ -37,6 +40,14 @@ static void fail(const char* desc, const char* file, int line, const char* expr)
         if (_threw) { ok(desc); } \
         else { fail(desc, __FILE__, __LINE__, "expected exception: " #expr); } \
     } while(0)
+
+#define CHECK_THROWS_BLOCK(name, ...)                   \
+    do {                                                \
+        bool _threw = false;                            \
+        try { __VA_ARGS__ }                             \
+        catch (...) { _threw = true; }                  \
+        CHECK(name, _threw);                            \
+    } while (0)
 
 #define SUITE(name) \
     do { current_suite = name; \
@@ -106,6 +117,39 @@ void test_DynamicArray() {
         DynamicArray<int> arr(2);
         CHECK_THROWS("Resize negative", arr.Resize(-1));
     }
+
+    {
+        int d[] = { 1,2,3 };
+        DynamicArray<int> arr(d, 3);
+        auto* en = arr.GetEnumerator();
+        int sum = 0;
+        while (en->MoveNext()) {
+            sum += en->GetCurrent();
+        }
+        CHECK("DynamicArray enumerator sum", sum == 6);
+        delete en;
+    }
+
+    {
+        int d[] = { 5,10 };
+        DynamicArray<int> arr(d, 2);
+        auto* en = arr.GetEnumerator();
+        CHECK("DynamicArray enumerator first MoveNext", en->MoveNext());
+        CHECK("DynamicArray enumerator first value", en->GetCurrent() == 5);
+        en->Reset();
+        CHECK("DynamicArray enumerator reset MoveNext", en->MoveNext());
+        CHECK("DynamicArray enumerator reset value", en->GetCurrent() == 5);
+        delete en;
+    }
+
+    {
+        int d[] = { 1 };
+        DynamicArray<int> arr(d, 1);
+        auto* en = arr.GetEnumerator();
+        CHECK_THROWS("DynamicArray GetCurrent before MoveNext throws", en->GetCurrent());
+        delete en;
+    }
+
 }
 
 // 2. LinkedList
@@ -194,6 +238,42 @@ void test_LinkedList() {
         CHECK_THROWS("InsertAt on empty", l.InsertAt(1, 5));
     }
     CHECK_THROWS("null+neg throws", LinkedList<int>(nullptr, -1));
+
+    {
+        int d[] = { 1,2,3 };
+        LinkedList<int> l(d, 3);
+        auto* en = l.GetEnumerator();
+        int sum = 0;
+        while (en->MoveNext()) {
+            sum += en->GetCurrent();
+        }
+        CHECK("LinkedList enumerator sum", sum == 6);
+        delete en;
+    }
+
+    {
+        int d[] = { 5,10 };
+        LinkedList<int> l(d, 2);
+        auto* en = l.GetEnumerator();
+        CHECK("LinkedList enumerator first MoveNext", en->MoveNext());
+        CHECK("LinkedList enumerator first value", en->GetCurrent() == 5);
+        en->Reset();
+        CHECK("LinkedList enumerator reset MoveNext", en->MoveNext());
+        CHECK("LinkedList enumerator reset value", en->GetCurrent() == 5);
+        delete en;
+    }
+
+    {
+        int d[] = { 1 };
+        LinkedList<int> l(d, 1);
+        auto* en = l.GetEnumerator();
+        CHECK_THROWS("LinkedList GetCurrent before MoveNext throws", en->GetCurrent());
+        CHECK("LinkedList enumerator reaches first", en->MoveNext());
+        CHECK("LinkedList enumerator reaches end", !en->MoveNext());
+        CHECK_THROWS("LinkedList GetCurrent after end throws", en->GetCurrent());
+        delete en;
+    }
+
 }
 
 // 3. MutableArraySequence
@@ -373,35 +453,35 @@ void test_Builder() {
 
 // 6. Enumerator (ArraySequence)
 void test_Enumerator() {
-    SUITE("Enumerator (ArraySequence)");
+    SUITE("Enumerator (ArraySequence / DynamicArray)");
 
     {
         int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        auto* en = s.get_enumerator(); int sum = 0;
-        while (en->move_next()) sum += en->get_current();
+        auto* en = s.GetEnumerator(); int sum = 0;
+        while (en->MoveNext()) sum += en->GetCurrent();
         CHECK("iterate sum", sum == 6);
         delete en;
     }
 
     {
         int d[] = { 5,10 }; MutableArraySequence<int> s(d, 2);
-        auto* en = s.get_enumerator();
-        en->move_next(); en->reset(); en->move_next();
-        CHECK("reset restarts iteration", en->get_current() == 5);
+        auto* en = s.GetEnumerator();
+        en->MoveNext(); en->Reset(); en->MoveNext();
+        CHECK("reset restarts iteration", en->GetCurrent() == 5);
         delete en;
     }
 
     {
         int d[] = { 1 }; MutableArraySequence<int> s(d, 1);
-        auto* en = s.get_enumerator();
-        CHECK_THROWS("get_current before move_next throws", en->get_current());
+        auto* en = s.GetEnumerator();
+        CHECK_THROWS("get_current before move_next throws", en->GetCurrent());
         delete en;
     }
 
     {
         MutableArraySequence<int> s;
-        auto* en = s.get_enumerator();
-        CHECK("move_next on empty returns false", !en->move_next());
+        auto* en = s.GetEnumerator();
+        CHECK("move_next on empty returns false", !en->MoveNext());
         delete en;
     }
 }
@@ -412,7 +492,11 @@ void test_MapReduce() {
 
     {
         int d[] = { 1,2,3 }; MutableArraySequence<int> s(d, 3);
-        auto* r = Map<int, int>(&s, [](const int& x) { return x * 2; });
+        auto* r = Map<int, int>(
+            &s,
+            [](const int& x) { return x * 2; },
+            []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+        );
         CHECK("Map first element", r->Get(0) == 2);
         CHECK("Map last element", r->Get(2) == 6);
         delete r;
@@ -420,7 +504,11 @@ void test_MapReduce() {
 
     {
         int d[] = { 1,2,3,4,5 }; MutableArraySequence<int> s(d, 5);
-        auto* r = Where<int>(&s, [](const int& x) { return x % 2 == 0; });
+        auto* r = Where<int>(
+            &s,
+            [](const int& x) { return x % 2 == 0; },
+            []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+        );
         CHECK("Where length", r->GetLength() == 2);
         CHECK("Where first element", r->Get(0) == 2);
         delete r;
@@ -434,7 +522,11 @@ void test_MapReduce() {
 
     {
         MutableArraySequence<int> s;
-        auto* r = Map<int, int>(&s, [](const int& x) { return x * 2; });
+        auto* r = Map<int, int>(
+            &s,
+            [](const int& x) { return x * 2; },
+            []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+        );
         CHECK("Map on empty", r->GetLength() == 0);
         delete r;
     }
@@ -444,6 +536,41 @@ void test_MapReduce() {
         int p = Reduce<int, int>(&s, [](const int& a, const int& x) { return a * x; }, 1);
         CHECK("Reduce product", p == 6);
     }
+
+    {
+        int d[] = { 1,2,3 };
+        MutableListSequence<int> s(d, 3);
+        auto* r = Map<int, int>(
+            &s,
+            [](const int& x) { return x + 10; },
+            []() -> Sequence<int>*{ return new MutableListSequence<int>(); }
+        );
+        CHECK("Map ListSequence keeps requested result length", r->GetLength() == 3);
+        CHECK("Map ListSequence first element", r->Get(0) == 11);
+        CHECK("Map ListSequence last element", r->Get(2) == 13);
+        delete r;
+    }
+
+    {
+        int d[] = { 1,2,3,4,5 };
+        MutableListSequence<int> s(d, 5);
+        auto* r = Where<int>(
+            &s,
+            [](const int& x) { return x > 3; },
+            []() -> Sequence<int>*{ return new MutableListSequence<int>(); }
+        );
+        CHECK("Where ListSequence length", r->GetLength() == 2);
+        CHECK("Where ListSequence first element", r->Get(0) == 4);
+        delete r;
+    }
+
+    {
+        int d[] = { 1,2,3,4 };
+        MutableListSequence<int> s(d, 4);
+        int sum = Reduce<int, int>(&s, [](const int& a, const int& x) { return a + x; }, 0);
+        CHECK("Reduce ListSequence sum", sum == 10);
+    }
+
 }
 
 // 8. Zip / Unzip
@@ -453,7 +580,11 @@ void test_Zip() {
     {
         int a[] = { 1,2,3 }, b[] = { 4,5,6 };
         MutableArraySequence<int> sa(a, 3), sb(b, 3);
-        auto* z = Zip<int, int>(&sa, &sb);
+        auto* z = Zip<int, int>(
+            &sa,
+            &sb,
+            []() -> Sequence<Pair<int, int>>*{ return new MutableArraySequence<Pair<int, int>>(); }
+        );
         CHECK("Zip length", z->GetLength() == 3);
         CHECK("Zip first.first", z->Get(0).first == 1);
         CHECK("Zip first.second", z->Get(0).second == 4);
@@ -463,7 +594,11 @@ void test_Zip() {
     {
         int a[] = { 1,2,3 }, b[] = { 4,5 };
         MutableArraySequence<int> sa(a, 3), sb(b, 2);
-        auto* z = Zip<int, int>(&sa, &sb);
+        auto* z = Zip<int, int>(
+            &sa,
+            &sb,
+            []() -> Sequence<Pair<int, int>>*{ return new MutableArraySequence<Pair<int, int>>(); }
+        );
         CHECK("Zip truncates to shorter", z->GetLength() == 2);
         delete z;
     }
@@ -471,13 +606,38 @@ void test_Zip() {
     {
         int a[] = { 1,2 }, b[] = { 3,4 };
         MutableArraySequence<int> sa(a, 2), sb(b, 2);
-        auto* z = Zip<int, int>(&sa, &sb);
+        auto* z = Zip<int, int>(
+            &sa,
+            &sb,
+            []() -> Sequence<Pair<int, int>>*{ return new MutableArraySequence<Pair<int, int>>(); }
+        );
         Sequence<int>* outA; Sequence<int>* outB;
-        Unzip<int, int>(z, outA, outB);
+        Unzip<int, int>(
+            z,
+            outA,
+            outB,
+            []() -> Sequence<int>*{ return new MutableArraySequence<int>(); },
+            []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+        );
         CHECK("Unzip first sequence", outA->Get(0) == 1);
         CHECK("Unzip second sequence", outB->Get(1) == 4);
         delete z; delete outA; delete outB;
     }
+
+    {
+        int a[] = { 1,2,3 }, b[] = { 4,5,6 };
+        MutableListSequence<int> sa(a, 3), sb(b, 3);
+        auto* z = Zip<int, int>(
+            &sa,
+            &sb,
+            []() -> Sequence<Pair<int, int>>*{ return new MutableListSequence<Pair<int, int>>(); }
+        );
+        CHECK("Zip ListSequence length", z->GetLength() == 3);
+        CHECK("Zip ListSequence first.first", z->Get(0).first == 1);
+        CHECK("Zip ListSequence last.second", z->Get(2).second == 6);
+        delete z;
+    }
+
 }
 
 // 9. BitSequence
@@ -971,41 +1131,293 @@ void test_ListBuilder() {
 
 // 14. ListSequence Enumerator
 void test_ListEnumerator() {
-    SUITE("Enumerator (ListSequence)");
+    SUITE("Enumerator (ListSequence / LinkedList)");
 
     {
         int d[] = { 1,2,3 }; MutableListSequence<int> s(d, 3);
-        auto* en = s.get_enumerator(); int sum = 0;
-        while (en->move_next()) sum += en->get_current();
+        auto* en = s.GetEnumerator(); int sum = 0;
+        while (en->MoveNext()) sum += en->GetCurrent();
         CHECK("iterate sum", sum == 6);
         delete en;
     }
 
     {
         int d[] = { 5,10 }; MutableListSequence<int> s(d, 2);
-        auto* en = s.get_enumerator();
-        en->move_next(); en->reset(); en->move_next();
-        CHECK("reset restarts iteration", en->get_current() == 5);
+        auto* en = s.GetEnumerator();
+        en->MoveNext(); en->Reset(); en->MoveNext();
+        CHECK("reset restarts iteration", en->GetCurrent() == 5);
         delete en;
     }
 
     {
         int d[] = { 1 }; MutableListSequence<int> s(d, 1);
-        auto* en = s.get_enumerator();
-        CHECK_THROWS("get_current before move_next throws", en->get_current());
+        auto* en = s.GetEnumerator();
+        CHECK_THROWS("get_current before move_next throws", en->GetCurrent());
         delete en;
     }
 
     {
         MutableListSequence<int> s;
-        auto* en = s.get_enumerator();
-        CHECK("move_next on empty returns false", !en->move_next());
+        auto* en = s.GetEnumerator();
+        CHECK("move_next on empty returns false", !en->MoveNext());
         delete en;
     }
 }
 
+// 15. Exception tests
+void test_ThrowCases() {
+    std::cout << "\n=== Throw cases / Exception safety ===\n";
+
+    {
+        DynamicArray<int> arr;
+
+        CHECK_THROWS("DynamicArray Get from empty throws", arr.Get(0));
+        CHECK_THROWS("DynamicArray Get negative throws", arr.Get(-1));
+        CHECK_THROWS("DynamicArray Set empty throws", arr.Set(0, 10));
+        CHECK_THROWS("DynamicArray Resize negative throws", arr.Resize(-1));
+    }
+
+    {
+        int data[] = { 1, 2, 3 };
+        DynamicArray<int> arr(data, 3);
+
+        CHECK_THROWS("DynamicArray Get high index throws", arr.Get(3));
+        CHECK_THROWS("DynamicArray Set high index throws", arr.Set(3, 10));
+
+        auto* en = arr.GetEnumerator();
+        CHECK_THROWS("DynamicArray GetCurrent before MoveNext throws", en->GetCurrent());
+
+        while (en->MoveNext()) {
+        }
+
+        CHECK_THROWS("DynamicArray GetCurrent after end throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        LinkedList<int> list;
+
+        CHECK_THROWS("LinkedList GetFirst empty throws", list.GetFirst());
+        CHECK_THROWS("LinkedList GetLast empty throws", list.GetLast());
+        CHECK_THROWS("LinkedList Get empty throws", list.Get(0));
+        CHECK_THROWS("LinkedList Get negative throws", list.Get(-1));
+        CHECK_THROWS("LinkedList InsertAt invalid throws", list.InsertAt(10, 1));
+
+        auto* en = list.GetEnumerator();
+        CHECK_THROWS("LinkedList GetCurrent before MoveNext throws", en->GetCurrent());
+
+        en->MoveNext();
+
+        CHECK_THROWS("LinkedList GetCurrent after empty MoveNext throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        int data[] = { 1, 2, 3 };
+        LinkedList<int> list(data, 3);
+
+        CHECK_THROWS("LinkedList Get high index throws", list.Get(3));
+        CHECK_THROWS("LinkedList InsertAt high index throws", list.InsertAt(10, 4));
+        CHECK_THROWS("LinkedList GetSubList negative start throws", list.GetSubList(-1, 1));
+        CHECK_THROWS("LinkedList GetSubList high end throws", list.GetSubList(0, 3));
+        CHECK_THROWS("LinkedList GetSubList end before start throws", list.GetSubList(2, 1));
+
+        auto* en = list.GetEnumerator();
+
+        while (en->MoveNext()) {
+        }
+
+        CHECK_THROWS("LinkedList GetCurrent after end throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        MutableArraySequence<int> seq;
+
+        CHECK_THROWS("MutableArraySequence GetFirst empty throws", seq.GetFirst());
+        CHECK_THROWS("MutableArraySequence GetLast empty throws", seq.GetLast());
+        CHECK_THROWS("MutableArraySequence Get empty throws", seq.Get(0));
+        CHECK_THROWS("MutableArraySequence Get negative throws", seq.Get(-1));
+        CHECK_THROWS("MutableArraySequence InsertAt invalid throws", seq.InsertAt(10, 1));
+        CHECK_THROWS("MutableArraySequence GetSubsequence empty throws", seq.GetSubsequence(0, 0));
+
+        auto* en = seq.GetEnumerator();
+        CHECK_THROWS("MutableArraySequence GetCurrent before MoveNext throws", en->GetCurrent());
+
+        en->MoveNext();
+
+        CHECK_THROWS("MutableArraySequence GetCurrent after empty MoveNext throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        int data[] = { 1, 2, 3 };
+        MutableArraySequence<int> seq(data, 3);
+
+        CHECK_THROWS("MutableArraySequence Get high index throws", seq.Get(3));
+        CHECK_THROWS("MutableArraySequence GetSubsequence negative start throws", seq.GetSubsequence(-1, 1));
+        CHECK_THROWS("MutableArraySequence GetSubsequence high end throws", seq.GetSubsequence(0, 3));
+        CHECK_THROWS("MutableArraySequence GetSubsequence end before start throws", seq.GetSubsequence(2, 1));
+
+        auto* en = seq.GetEnumerator();
+
+        while (en->MoveNext()) {
+        }
+
+        CHECK_THROWS("MutableArraySequence GetCurrent after end throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        MutableListSequence<int> seq;
+
+        CHECK_THROWS("MutableListSequence GetFirst empty throws", seq.GetFirst());
+        CHECK_THROWS("MutableListSequence GetLast empty throws", seq.GetLast());
+        CHECK_THROWS("MutableListSequence Get empty throws", seq.Get(0));
+        CHECK_THROWS("MutableListSequence Get negative throws", seq.Get(-1));
+        CHECK_THROWS("MutableListSequence InsertAt invalid throws", seq.InsertAt(10, 1));
+        CHECK_THROWS("MutableListSequence GetSubsequence empty throws", seq.GetSubsequence(0, 0));
+
+        auto* en = seq.GetEnumerator();
+        CHECK_THROWS("MutableListSequence GetCurrent before MoveNext throws", en->GetCurrent());
+
+        en->MoveNext();
+
+        CHECK_THROWS("MutableListSequence GetCurrent after empty MoveNext throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        int data[] = { 1, 2, 3 };
+        MutableListSequence<int> seq(data, 3);
+
+        CHECK_THROWS("MutableListSequence Get high index throws", seq.Get(3));
+        CHECK_THROWS("MutableListSequence GetSubsequence negative start throws", seq.GetSubsequence(-1, 1));
+        CHECK_THROWS("MutableListSequence GetSubsequence high end throws", seq.GetSubsequence(0, 3));
+        CHECK_THROWS("MutableListSequence GetSubsequence end before start throws", seq.GetSubsequence(2, 1));
+
+        auto* en = seq.GetEnumerator();
+
+        while (en->MoveNext()) {
+        }
+
+        CHECK_THROWS("MutableListSequence GetCurrent after end throws", en->GetCurrent());
+        delete en;
+    }
+
+    {
+        int data[] = { 1, 2, 3 };
+        MutableArraySequence<int> seq(data, 3);
+
+        CHECK_THROWS_BLOCK("Map null sequence throws", {
+            Map<int, int>(
+                nullptr,
+                [](const int& x) { return x * 2; },
+                []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+            );
+            });
+
+        CHECK_THROWS_BLOCK("Map empty function throws", {
+            Map<int, int>(
+                &seq,
+                std::function<int(const int&)>(),
+                []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+            );
+            });
+
+        CHECK_THROWS_BLOCK("Map empty factory throws", {
+            Map<int, int>(
+                &seq,
+                [](const int& x) { return x * 2; },
+                std::function<Sequence<int>*()>()
+            );
+            });
+
+        CHECK_THROWS_BLOCK("Where null sequence throws", {
+            Where<int>(
+                nullptr,
+                [](const int& x) { return x > 0; },
+                []() -> Sequence<int>*{ return new MutableArraySequence<int>(); }
+            );
+            });
+
+        CHECK_THROWS_BLOCK("Reduce null sequence throws", {
+            Reduce<int, int>(
+                nullptr,
+                [](const int& acc, const int& x) { return acc + x; },
+                0
+            );
+            });
+    }
+
+    {
+        int a[] = { 1, 2 };
+        int b[] = { 10, 20 };
+
+        MutableArraySequence<int> first(a, 2);
+        MutableArraySequence<int> second(b, 2);
+
+        CHECK_THROWS_BLOCK("Zip first null throws", {
+            Zip<int, int>(
+                nullptr,
+                &second,
+                []() -> Sequence<Pair<int, int>>*{
+                    return new MutableArraySequence<Pair<int, int>>();
+                }
+            );
+            });
+
+        CHECK_THROWS_BLOCK("Zip second null throws", {
+            Zip<int, int>(
+                &first,
+                nullptr,
+                []() -> Sequence<Pair<int, int>>*{
+                    return new MutableArraySequence<Pair<int, int>>();
+                }
+            );
+            });
+
+        CHECK_THROWS_BLOCK("Unzip null sequence throws", {
+            Sequence<int>*outFirst = nullptr;
+            Sequence<int>* outSecond = nullptr;
+
+            Unzip<int, int>(
+                nullptr,
+                outFirst,
+                outSecond,
+                []() -> Sequence<int>* { return new MutableArraySequence<int>(); },
+                []() -> Sequence<int>* { return new MutableArraySequence<int>(); }
+            );
+            });
+    }
+
+    {
+        BitSequence bits(4);
+
+        CHECK_THROWS("BitSequence Get negative throws", bits.Get(-1));
+        CHECK_THROWS("BitSequence Get high index throws", bits.Get(4));
+        CHECK_THROWS("BitSequence Set negative index throws", bits.Set(-1, 1));
+        CHECK_THROWS("BitSequence Set high index throws", bits.Set(4, 1));
+        CHECK_THROWS("BitSequence Set bad value high throws", bits.Set(0, 2));
+        CHECK_THROWS("BitSequence Set bad value low throws", bits.Set(0, -1));
+        CHECK_THROWS("BitSequence Flip high index throws", bits.Flip(4));
+    }
+
+    {
+        BitSequence a(3);
+        BitSequence b(4);
+        BitSequence result(3);
+
+        CHECK_THROWS("BitSequence AND size mismatch throws", a.AND(b, result));
+        CHECK_THROWS("BitSequence OR size mismatch throws", a.OR(b, result));
+        CHECK_THROWS("BitSequence XOR size mismatch throws", a.XOR(b, result));
+    }
+}
+
 int main() {
+#ifdef _WIN32
     SetConsoleOutputCP(65001);
+#endif
 
     test_DynamicArray();
     test_LinkedList();
@@ -1021,6 +1433,7 @@ int main() {
     test_ImmutableListSequence();
     test_ListBuilder();
     test_ListEnumerator();
+    test_ThrowCases();
     std::cout << "\n────────────────────────────────────────\n";
     if (failed == 0) {
         std::cout << "OK  Все тесты пройдены: " << total << "/" << total << "\n";

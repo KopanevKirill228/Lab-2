@@ -24,7 +24,7 @@ public:
     T operator[](int index) const override;
     Sequence<T>* operator+(const Sequence<T>& other) const override;
 
-    IEnumerator<T>* get_enumerator() const override;
+    IEnumerator<T>* GetEnumerator() const override;
 
     bool IsArray() const;
 
@@ -36,7 +36,7 @@ private:
 
     static const int THRESHOLD = 10;
 
-    void maybe_switch();
+    void MaybeSwitch();
 };
 
 #include "AdaptiveSequence.tpp"
