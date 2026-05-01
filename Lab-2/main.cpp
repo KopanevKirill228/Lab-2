@@ -51,23 +51,31 @@ void PrintSequence(const Sequence<int>* seq) {
         return;
     }
 
-    std::cout << "[";
+    IEnumerator<int>* en = nullptr;
 
-    auto* en = seq->GetEnumerator();
-    bool first = true;
+    try {
+        std::cout << "[";
 
-    while (en->MoveNext()) {
-        if (!first) {
-            std::cout << ", ";
+        en = seq->GetEnumerator();
+        bool first = true;
+
+        while (en->MoveNext()) {
+            if (!first) {
+                std::cout << ", ";
+            }
+
+            std::cout << en->GetCurrent();
+            first = false;
         }
 
-        std::cout << en->GetCurrent();
-        first = false;
+        std::cout << "]" << std::endl;
+
+        delete en;
     }
-
-    delete en;
-
-    std::cout << "]" << std::endl;
+    catch (...) {
+        delete en;
+        throw;
+    }
 }
 
 
@@ -77,16 +85,23 @@ void PrintPairSequence(const Sequence<Pair<int, int>>* seq) {
         return;
     }
 
-    auto* en = seq->GetEnumerator();
+    IEnumerator<Pair<int, int>>* en = nullptr;
 
-    while (en->MoveNext()) {
-        const Pair<int, int>& p = en->GetCurrent();
-        std::cout << "  (" << p.first << ", " << p.second << ")\n";
+    try {
+        en = seq->GetEnumerator();
+
+        while (en->MoveNext()) {
+            const Pair<int, int>& p = en->GetCurrent();
+            std::cout << "  (" << p.first << ", " << p.second << ")\n";
+        }
+
+        delete en;
     }
-
-    delete en;
+    catch (...) {
+        delete en;
+        throw;
+    }
 }
-
 
 Sequence<int>* CreateSequence() {
     std::cout << "\n=== Select Sequence Type ===" << std::endl;
@@ -109,48 +124,53 @@ Sequence<int>* CreateSequence() {
     }
 
     int* data = new int[n];
-
-    for (int i = 0; i < n; ++i) {
-        data[i] = readInt("  [" + std::to_string(i) + "]: ");
-    }
-
     Sequence<int>* seq = nullptr;
 
-    switch (type) {
-    case 1:
-        seq = new MutableArraySequence<int>(data, n);
-        break;
-
-    case 2:
-        seq = new MutableListSequence<int>(data, n);
-        break;
-
-    case 3:
-        seq = new ImmutableArraySequence<int>(data, n);
-        break;
-
-    case 4:
-        seq = new ImmutableListSequence<int>(data, n);
-        break;
-
-    case 5:
-        seq = new AdaptiveSequence<int>();
-
+    try {
         for (int i = 0; i < n; ++i) {
-            Sequence<int>* result = seq->Append(data[i]);
-
-            if (result != seq) {
-                delete seq;
-                seq = result;
-            }
+            data[i] = readInt("  [" + std::to_string(i) + "]: ");
         }
 
-        break;
+        switch (type) {
+        case 1:
+            seq = new MutableArraySequence<int>(data, n);
+            break;
+
+        case 2:
+            seq = new MutableListSequence<int>(data, n);
+            break;
+
+        case 3:
+            seq = new ImmutableArraySequence<int>(data, n);
+            break;
+
+        case 4:
+            seq = new ImmutableListSequence<int>(data, n);
+            break;
+
+        case 5:
+            seq = new AdaptiveSequence<int>();
+
+            for (int i = 0; i < n; ++i) {
+                Sequence<int>* result = seq->Append(data[i]);
+
+                if (result != seq) {
+                    delete seq;
+                    seq = result;
+                }
+            }
+
+            break;
+        }
+
+        delete[] data;
+        return seq;
     }
-
-    delete[] data;
-
-    return seq;
+    catch (...) {
+        delete[] data;
+        delete seq;
+        throw;
+    }
 }
 
 
@@ -224,54 +244,88 @@ void SequenceMenu(Sequence<int>*& seq) {
                 int s = readInt("Start index: ");
                 int e = readInt("End index:   ");
 
-                Sequence<int>* sub = seq->GetSubsequence(s, e);
+                Sequence<int>* sub = nullptr;
 
-                std::cout << "Subsequence: ";
-                PrintSequence(sub);
+                try {
+                    sub = seq->GetSubsequence(s, e);
 
-                delete sub;
+                    std::cout << "Subsequence: ";
+                    PrintSequence(sub);
+
+                    delete sub;
+                }
+                catch (...) {
+                    delete sub;
+                    throw;
+                }
             }
             else if (cmd == 6) {
-                Sequence<int>* other = CreateSequence();
-                Sequence<int>* result = seq->Concat(*other);
+                Sequence<int>* other = nullptr;
+                Sequence<int>* result = nullptr;
 
-                std::cout << "Result: ";
-                PrintSequence(result);
+                try {
+                    other = CreateSequence();
+                    result = seq->Concat(*other);
 
-                delete other;
-                delete result;
+                    std::cout << "Result: ";
+                    PrintSequence(result);
+
+                    delete other;
+                    delete result;
+                }
+                catch (...) {
+                    delete other;
+                    delete result;
+                    throw;
+                }
             }
             else if (cmd == 7) {
-                Sequence<int>* result = Map<int, int>(
-                    seq,
-                    [](const int& x) {
-                        return x * 2;
-                    },
-                    []() -> Sequence<int>*{
-                        return new MutableArraySequence<int>();
-                    }
-                );
+                Sequence<int>* result = nullptr;
 
-                std::cout << "Map (x*2): ";
-                PrintSequence(result);
+                try {
+                    result = Map<int, int>(
+                        seq,
+                        [](const int& x) {
+                            return x * 2;
+                        },
+                        []() -> Sequence<int>*{
+                            return new MutableArraySequence<int>();
+                        }
+                    );
 
-                delete result;
+                    std::cout << "Map (x*2): ";
+                    PrintSequence(result);
+
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
             }
             else if (cmd == 8) {
-                Sequence<int>* result = Where<int>(
-                    seq,
-                    [](const int& x) {
-                        return x % 2 == 0;
-                    },
-                    []() -> Sequence<int>*{
-                        return new MutableArraySequence<int>();
-                    }
-                );
+                Sequence<int>* result = nullptr;
 
-                std::cout << "Where (even): ";
-                PrintSequence(result);
+                try {
+                    result = Where<int>(
+                        seq,
+                        [](const int& x) {
+                            return x % 2 == 0;
+                        },
+                        []() -> Sequence<int>*{
+                            return new MutableArraySequence<int>();
+                        }
+                    );
 
-                delete result;
+                    std::cout << "Where (even): ";
+                    PrintSequence(result);
+
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
             }
             else if (cmd == 9) {
                 int sum = Reduce<int, int>(
@@ -285,21 +339,31 @@ void SequenceMenu(Sequence<int>*& seq) {
                 std::cout << "Sum: " << sum << std::endl;
             }
             else if (cmd == 10) {
-                Sequence<int>* other = CreateSequence();
+                Sequence<int>* other = nullptr;
+                Sequence<Pair<int, int>>* zipped = nullptr;
 
-                Sequence<Pair<int, int>>* zipped = Zip<int, int>(
-                    seq,
-                    other,
-                    []() -> Sequence<Pair<int, int>>*{
-                        return new MutableArraySequence<Pair<int, int>>();
-                    }
-                );
+                try {
+                    other = CreateSequence();
 
-                std::cout << "Zip result:" << std::endl;
-                PrintPairSequence(zipped);
+                    zipped = Zip<int, int>(
+                        seq,
+                        other,
+                        []() -> Sequence<Pair<int, int>>*{
+                            return new MutableArraySequence<Pair<int, int>>();
+                        }
+                    );
 
-                delete other;
-                delete zipped;
+                    std::cout << "Zip result:" << std::endl;
+                    PrintPairSequence(zipped);
+
+                    delete other;
+                    delete zipped;
+                }
+                catch (...) {
+                    delete other;
+                    delete zipped;
+                    throw;
+                }
             }
             else if (cmd == 11) {
                 std::cout << "First: " << seq->GetFirst() << std::endl;
