@@ -6,33 +6,79 @@ template <class T>
 void AdaptiveSequence<T>::MaybeSwitch() {
     if (is_array_ && insert_ops_ > index_ops_ + THRESHOLD) {
         Sequence<T>* new_inner = new MutableListSequence<T>();
+        IEnumerator<T>* en = nullptr;
+
         try {
-            for (int i = 0; i < inner_->GetLength(); i++)
-                new_inner->Append(inner_->Get(i));
+            en = inner_->GetEnumerator();
+
+            if (en == nullptr) {
+                throw std::runtime_error("Enumerator is nullptr");
+            }
+
+            while (en->MoveNext()) {
+                Sequence<T>* next = new_inner->Append(en->GetCurrent());
+
+                if (next == nullptr) {
+                    throw std::runtime_error("Append returned nullptr");
+                }
+
+                if (next != new_inner) {
+                    delete new_inner;
+                    new_inner = next;
+                }
+            }
+
+            delete en;
         }
         catch (...) {
-            delete new_inner; // чистим если что-то пошло не так
-            throw; // пробрасываем исключение дальше
-        }
-        delete inner_;
-        inner_ = new_inner;
-        is_array_ = false;
-        index_ops_ = insert_ops_ = 0;
-    }
-    else if (!is_array_ && index_ops_ > insert_ops_ + THRESHOLD) {
-        Sequence<T>* new_inner = new MutableArraySequence<T>();
-        try {
-            for (int i = 0; i < inner_->GetLength(); i++)
-                new_inner->Append(inner_->Get(i));
-        }
-        catch (...) {
+            delete en;
             delete new_inner;
             throw;
         }
+
+        delete inner_;
+        inner_ = new_inner;
+        is_array_ = false;
+        index_ops_ = 0;
+        insert_ops_ = 0;
+    }
+    else if (!is_array_ && index_ops_ > insert_ops_ + THRESHOLD) {
+        Sequence<T>* new_inner = new MutableArraySequence<T>();
+        IEnumerator<T>* en = nullptr;
+
+        try {
+            en = inner_->GetEnumerator();
+
+            if (en == nullptr) {
+                throw std::runtime_error("Enumerator is nullptr");
+            }
+
+            while (en->MoveNext()) {
+                Sequence<T>* next = new_inner->Append(en->GetCurrent());
+
+                if (next == nullptr) {
+                    throw std::runtime_error("Append returned nullptr");
+                }
+
+                if (next != new_inner) {
+                    delete new_inner;
+                    new_inner = next;
+                }
+            }
+
+            delete en;
+        }
+        catch (...) {
+            delete en;
+            delete new_inner;
+            throw;
+        }
+
         delete inner_;
         inner_ = new_inner;
         is_array_ = true;
-        index_ops_ = insert_ops_ = 0;
+        index_ops_ = 0;
+        insert_ops_ = 0;
     }
 }
 
